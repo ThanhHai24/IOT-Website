@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <title>IoT Dashboard - Device Monitoring & Control</title>
+</head>
+<body>
+    <!-- SideBar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">IOT Dashboard</div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a class="nav-link active" href="index.html">
+                    <span class="nav-icon"><i class="ri-home-7-line"></i></span>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="sensordata.html">
+                    <span class="nav-icon"><i class="ri-sensor-line"></i></span>
+                    <span>Sensor Data</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="devices.html">
+                    <span class="nav-icon"><i class="ri-lightbulb-line"></i></span>
+                    <span>Devices</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+     <div class="main-content">
+        <!-- TopBar -->
+        <div class="header">
+            <h1 class="page-title" id="pageTitle">Dashboard</h1>
+            <div class="profile-section" onclick="openProfileModal()">
+                <div class="profile-avatar">H</div>
+                <span class="profile-name">Nông Thanh Hải</span>
+            </div>
+        </div>
+
+        <!-- Dashboard Page -->
+        <div id="dashboard" class="page active">
+            <!-- Sensor Cards -->
+            <div class="dashboard-grid">
+                <div class="card sensor-card">
+                    <div class="sensor-info">
+                        <h3>Temperature</h3>
+                        <div class="sensor-value" id="temp">25.5<span>°C</span></div>
+                    </div>
+                    <div class="sensor-icon temp-icon"><i class="bi bi-thermometer icon-bg"></i></div>
+                </div>
+                <div class="card sensor-card">
+                    <div class="sensor-info">
+                        <h3>Humidity</h3>
+                        <div class="sensor-value" id="humid">65<span>%</span></div>
+                    </div>
+                    <div class="sensor-icon humid-icon"><i class="bi bi-droplet humid-icon"></i></div>
+                </div>
+                <div class="card sensor-card">
+                    <div class="sensor-info">
+                        <h3>Light Level</h3>
+                        <div class="sensor-value" id="light">750 <span>lux</span></div>
+                    </div>
+                    <div class="sensor-icon light-icon"><i class="bi bi-brightness-high-fill light-icon"></i></div>
+                </div>
+            </div>
+
+            <!-- Device Controls -->
+            <div class="dashboard-grid">
+                <div class="card device-card">
+                    <div class="device-card-name">
+                        <div class="device-icon">
+                            <i class="bi bi-lightbulb-fill"></i>
+                        </div>
+                        <div class="device-info">
+                            <h3>Light Bulb</h3>
+                            <span class="device-status" id="status-light"></span>
+                        </div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" onchange="toggleDevice('light', this)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="card device-card">
+                    <div class="device-card-name">
+                        <div class="device-icon">
+                            <i class="bi bi-fan"></i>
+                        </div>
+                        <div class="device-info">
+                            <h3>Fan</h3>
+                            <span class="device-status" id="status-fan"></span>
+                        </div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" onchange="toggleDevice('fan', this)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="card device-card">
+                    <div class="device-card-name">
+                        <div class="device-icon">
+                            <i class="bi bi-snow2"></i>
+                        </div>
+                        <div class="device-info">
+                            <h3>Air Conditioner</h3>
+                            <span class="device-status" id="status-ac"></span>
+                        </div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" onchange="toggleDevice('ac', this)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="chart-container">
+                <h3 class="chart-title">Biểu đồ theo thời gian</h3>
+                <canvas id="chartLine" height="120"></canvas>
+                <div id="chart"></div>
+            </div>
+        </div>
+
+        <!-- Sensor Data Page -->
+        <div id="sensor" class="page">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Nhiệt độ</div>
+                    <div class="stat-value">25.5<span class="stat-unit">°C</span></div>
+                    <div class="stat-label">Thực tế</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Cao nhất</div>
+                    <div class="stat-value">32.0<span class="stat-unit">°C</span></div>
+                    <div class="stat-label">Trong ngày</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Thấp nhất</div>
+                    <div class="stat-value">18.5<span class="stat-unit">°C</span></div>
+                    <div class="stat-label">Trong ngày</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Trung bình</div>
+                    <div class="stat-value">24.8<span class="stat-unit">°C</span></div>
+                    <div class="stat-label">Trong ngày</div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Độ ẩm</div>
+                    <div class="stat-value">65<span class="stat-unit">%</span></div>
+                    <div class="stat-label">Thực tế</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Cao nhất</div>
+                    <div class="stat-value">78<span class="stat-unit">%</span></div>
+                    <div class="stat-label">Trong ngày</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Thấp nhất</div>
+                    <div class="stat-value">45<span class="stat-unit">%</span></div>
+                    <div class="stat-label">Trong ngày</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Trung bình</div>
+                    <div class="stat-value">62<span class="stat-unit">%</span></div>
+                    <div class="stat-label">Trong ngày</div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Ánh sáng</div>
+                    <div class="stat-value">750<span class="stat-unit">lux</span></div>
+                    <div class="stat-label">Thực tế</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Cao nhất</div>
+                    <div class="stat-value">1200<span class="stat-unit">lux</span></div>
+                    <div class="stat-label">Trong ngày</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Thấp nhất</div>
+                    <div class="stat-value">50<span class="stat-unit">lux</span></div>
+                    <div class="stat-label">Trong ngày</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Trung bình</div>
+                    <div class="stat-value">580<span class="stat-unit">lux</span></div>
+                    <div class="stat-label">Trong ngày</div>
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="data-table">
+                <div class="table-header">Dữ liệu sensor</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Thời gian</th>
+                            <th>Nhiệt độ (°C)</th>
+                            <th>Độ ẩm (%)</th>
+                            <th>Ánh sáng (lux)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sensorDataTable">
+                        <tr>
+                            <td>08:00:00</td>
+                            <td>23.5</td>
+                            <td>68</td>
+                            <td>450</td>
+                        </tr>
+                        <tr>
+                            <td>09:00:00</td>
+                            <td>24.2</td>
+                            <td>65</td>
+                            <td>680</td>
+                        </tr>
+                        <tr>
+                            <td>10:00:00</td>
+                            <td>25.8</td>
+                            <td>62</td>
+                            <td>850</td>
+                        </tr>
+                        <tr>
+                            <td>11:00:00</td>
+                            <td>27.3</td>
+                            <td>58</td>
+                            <td>1100</td>
+                        </tr>
+                        <tr>
+                            <td>12:00:00</td>
+                            <td>29.0</td>
+                            <td>55</td>
+                            <td>1200</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Devices Page -->
+        <div id="devices" class="page">
+            <!-- Device List -->
+            <div class="device-list">
+                <div class="device-item">
+                    <div class="device-details">
+                        <h3>💡 Đèn phòng khách</h3>
+                        <div class="device-runtime">Thời gian hoạt động: 2h 30m</div>
+                    </div>
+                    <div class="device-controls">
+                        <span class="status-badge offline">Offline</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="device-item">
+                    <div class="device-details">
+                        <h3>🌀 Quạt trần</h3>
+                        <div class="device-runtime">Thời gian hoạt động: 5h 15m</div>
+                    </div>
+                    <div class="device-controls">
+                        <span class="status-badge online">Online</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="device-item">
+                    <div class="device-details">
+                        <h3>❄️ Điều hòa</h3>
+                        <div class="device-runtime">Thời gian hoạt động: 1h 45m</div>
+                    </div>
+                    <div class="device-controls">
+                        <span class="status-badge online">Online</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Table -->
+            <div class="data-table" style="margin-top: 30px;">
+                <div class="table-header">Lịch sử bật/tắt thiết bị</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Thời gian</th>
+                            <th>Thiết bị</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>14:30:25</td>
+                            <td>Đèn phòng khách</td>
+                            <td><span style="color: #10b981;">Bật</span></td>
+                            <td>Người dùng</td>
+                        </tr>
+                        <tr>
+                            <td>14:15:10</td>
+                            <td>Điều hòa</td>
+                            <td><span style="color: #ef4444;">Tắt</span></td>
+                            <td>Tự động</td>
+                        </tr>
+                        <tr>
+                            <td>13:45:00</td>
+                            <td>Quạt trần</td>
+                            <td><span style="color: #10b981;">Bật</span></td>
+                            <td>Tự động</td>
+                        </tr>
+                        <tr>
+                            <td>12:00:00</td>
+                            <td>Đèn phòng khách</td>
+                            <td><span style="color: #ef4444;">Tắt</span></td>
+                            <td>Người dùng</td>
+                        </tr>
+                        <tr>
+                            <td>10:30:15</td>
+                            <td>Điều hòa</td>
+                            <td><span style="color: #10b981;">Bật</span></td>
+                            <td>Người dùng</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Thông tin cá nhân</h2>
+                <button class="close-btn" onclick="closeProfileModal()">&times;</button>
+            </div>
+            <div class="profile-modal-content">
+                <div class="profile-modal-avatar">H</div>
+                <div class="profile-info">
+                    <h2>Nông Thanh Hải</h2>
+                    <p><strong>Mã Sinh Viên:</strong> B22DCCN264</p>
+                    <p><strong>Email:</strong> nthanhhai594@gmail.com</p>
+                    
+                </div>
+                <div class="profile-links">
+                    <a href="https://github.com" target="_blank">GitHub</a>
+                    <a href="#" onclick="alert('Link PDF sẽ được cập nhật')">PDF</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Profile modal JS -->
+    <script>
+        function openProfileModal() {
+            document.getElementById('profileModal').classList.add('show');
+        }
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.remove('show');
+        }
+    </script>
+
+    <!-- Chart.js libs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0"></script>
+
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+        /** =============================
+         *  A) Khai báo chung
+         *  ============================= */
+        const socket = io();
+
+        // Map tên UI -> id thiết bị trong DB (seed: 1,2,3)
+        const DEVICE_MAP = {
+        light: { id: 1, label: 'Light Bulb' },
+        fan:   { id: 2, label: 'Fan' },
+        ac:    { id: 3, label: 'Air Conditioner' }
+        };
+
+        // Helpers
+        function fmtUsage(sec){
+        const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;
+        if(h>0) return `${h}h ${m}m`;
+        if(m>0) return `${m}m ${s}s`;
+        return `${s}s`;
+        }
+        function setDeviceStatus(key, status){
+        const span = document.getElementById(`status-${key}`);
+        if(!span) return;
+        span.innerText = status;
+        span.classList.remove('on','off');
+        span.classList.add(status==='ON'?'on':'off');
+        }
+        function getToggleInput(key){
+        // tìm checkbox theo onchange chứa toggleDevice('<key>'
+        return document.querySelector(`input[type="checkbox"][onchange*="toggleDevice('${key}'"]`);
+        }
+
+        /** =============================
+         *  B) Cards cảm biến (top)
+         *  ============================= */
+        function updateSensorCards(row){
+        if(!row) return;
+        const t=Number(row.temp), h=Number(row.humid), l=Number(row.light);
+        if(!isNaN(t)) document.getElementById('temp').innerText  = `${t.toFixed(1)}°C`;
+        if(!isNaN(h)) document.getElementById('humid').innerText = `${h.toFixed(1)}%`;
+        if(!isNaN(l)) document.getElementById('light').innerText = `${l.toFixed(1)} lux`;
+        }
+
+        /** =============================
+         *  C) Chart thời gian thực
+         *  ============================= */
+        const ctx = document.getElementById('chartLine').getContext('2d');
+        const lineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            datasets: [
+            { label:'Temperature (°C)', data:[], yAxisID:'y',  borderColor:'#ef4444', backgroundColor:'#ef4444', tension:0.3, pointRadius:0 },
+            { label:'Humidity (%)',     data:[], yAxisID:'y',  borderColor:'#3b82f6', backgroundColor:'#3b82f6', tension:0.3, pointRadius:0 },
+            { label:'Illuminance (lux)',data:[], yAxisID:'y1', borderColor:'#f59e0b', backgroundColor:'#f59e0b', tension:0.3, pointRadius:0 }
+            ]
+        },
+        options: {
+            responsive:true, maintainAspectRatio:false,
+            interaction:{ mode:'nearest', intersect:false },
+            scales:{
+            x:{ type:'time', time:{ unit:'minute' }, ticks:{ maxRotation:0 } },
+            y:{ position:'left', title:{ display:true, text:'Temp / Hum' }, min:0, max:100, grid:{ drawOnChartArea:true } },
+            y1:{ position:'right', title:{ display:true, text:'Lux' }, min:0, max:65000, grid:{ drawOnChartArea:false } } // <-- 65k lux
+            },
+            plugins:{
+            legend:{ display:true },
+            tooltip:{ callbacks:{ label:(ctx)=>{
+                const label=ctx.dataset.label||'', v=ctx.parsed.y;
+                if(label.includes('Temperature')) return `${label}: ${v.toFixed(1)} °C`;
+                if(label.includes('Humidity'))    return `${label}: ${v.toFixed(0)} %`;
+                if(label.includes('Illuminance')) return `${label}: ${v.toFixed(0)} lux`;
+                return `${label}: ${v}`;
+            }}}
+            }
+        }
+        });
+
+        // Thêm điểm vào chart
+        function addPoint(tsISOorMs, temp, hum, lux, keep=300){
+        const ts = typeof tsISOorMs==='string' ? new Date(tsISOorMs).getTime() : tsISOorMs;
+        if(!isNaN(temp)) lineChart.data.datasets[0].data.push({x:ts,y:Number(temp)});
+        if(!isNaN(hum))  lineChart.data.datasets[1].data.push({x:ts,y:Number(hum)});
+        if(!isNaN(lux))  lineChart.data.datasets[2].data.push({x:ts,y:Number(lux)});
+        lineChart.data.datasets.forEach(ds=>{ while(ds.data.length>keep) ds.data.shift(); });
+        lineChart.update('none');
+        }
+
+        /** =============================
+         *  D) Nạp dữ liệu ban đầu
+         *  ============================= */
+        (async function bootstrap(){
+        // 1) Snapshot cảm biến mới nhất
+        try{
+            const r1 = await fetch('/api/sensors/latest');
+            const latest = await r1.json();
+            if(latest && latest.temp!=null) updateSensorCards(latest);
+        }catch(e){ console.warn('load latest sensors failed', e); }
+
+        // 2) Lịch sử để vẽ chart (limit 200 gần nhất)
+        try{
+            const r2 = await fetch('/api/sensors?limit=200');
+            let history = await r2.json();
+            history.sort((a,b)=> new Date(a.measured_at) - new Date(b.measured_at));
+            history.forEach(row=> addPoint(row.measured_at, row.temp, row.humid, row.light));
+        }catch(e){ console.warn('load history failed', e); }
+
+        // 3) Lấy danh sách thiết bị để đồng bộ trạng thái 3 công tắc
+        try{
+            const r3 = await fetch('/api/devices');
+            const devices = await r3.json();
+            const byId = {}; devices.forEach(d=> byId[d.id]=d);
+            Object.entries(DEVICE_MAP).forEach(([key,{id}])=>{
+            const dev = byId[id]; if(!dev) return;
+            setDeviceStatus(key, dev.status);
+            const input = getToggleInput(key);
+            if(input) input.checked = dev.status==='ON';
+            });
+        }catch(e){ console.warn('load devices failed', e); }
+        })();
+
+        /** =============================
+         *  E) Realtime từ backend (Socket.IO)
+         *  ============================= */
+        socket.on('sensors:new', (row)=>{
+        updateSensorCards(row);
+        addPoint(row.measured_at || Date.now(), row.temp, row.humid, row.light);
+        });
+
+        socket.on('devices:update', (payload)=>{
+        // payload: { id, name, status, usage_seconds_today, usage_date }
+        const entry = Object.entries(DEVICE_MAP).find(([_,v])=> v.id===payload.id);
+        if(!entry) return;
+        const [key] = entry;
+        setDeviceStatus(key, payload.status);
+        const input = getToggleInput(key);
+        if(input) input.checked = payload.status==='ON';
+        });
+
+        /** =============================
+         *  F) Toggle thiết bị từ Dashboard
+         *  ============================= */
+        async function toggleDevice(key, checkboxEl){
+        const meta = DEVICE_MAP[key]; if(!meta) return;
+        const status = checkboxEl.checked ? 'ON' : 'OFF';
+        try{
+            await fetch('/api/devices/toggle', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ id: meta.id, status })
+            });
+            // Tạm set UI (ACK về sẽ đồng bộ lại)
+            setDeviceStatus(key, status);
+        }catch(e){
+            console.error('toggle failed', e);
+            checkboxEl.checked = !checkboxEl.checked; // rollback
+            alert('Toggle thất bại!');
+        }
+        }
+    </script>
+
+
+
+</body>
+</html>
