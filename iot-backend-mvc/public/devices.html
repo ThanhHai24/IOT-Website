@@ -123,10 +123,10 @@
                     <div class="select-bar">
                         <select id="dataTypeSelect" onchange="filterTable()">
                             <option value="all">All</option>
-                            <option value="temperature">Time</option>
-                            <option value="humidity">Device</option>
-                            <option value="light">Status</option>
-                            <option value="light">Action By</option>
+                            <option value="time">Time</option>
+                            <option value="device">Device</option>
+                            <option value="status">Status</option>
+                            <option value="actionby">Action By</option>
                         </select>
                     </div>
                 </div>
@@ -154,84 +154,12 @@
                         </tr>
                     </thead>
                     <tbody id="ActionHistoryTable">
-                        <tr>
+                        <!-- <tr>
                             <td>25/8/2025 14:30:25</td>
                             <td>Light Bulb</td>
                             <td><span style="color: #10b981;">ON</span></td>
                             <td>User</td>
-                        </tr>
-                        <tr>
-                            <td>25/8/2025 14:15:10</td>
-                            <td>Air Conditioner</td>
-                            <td><span style="color: #ef4444;">OFF</span></td>
-                            <td>Auto</td>
-                        </tr>
-                        <tr>
-                            <td>25/8/2025 13:45:00</td>
-                            <td>Fan</td>
-                            <td><span style="color: #10b981;">ON</span></td>
-                            <td>Auto</td>
-                        </tr>
-                        <tr>
-                            <td>25/8/2025 13:30:45</td>
-                            <td>Light Bulb</td>
-                            <td><span style="color: #ef4444;">OFF</span></td>
-                            <td>User</td>
-                        </tr>
-                        <tr>
-                            <td>25/8/2025 13:00:30</td>
-                            <td>Air Conditioner</td>
-                            <td><span style="color: #10b981;">ON</span></td>
-                            <td>User</td>
-                        </tr>
-                        <tr>
-                            <td>25/8/2025 12:45:15</td>
-                            <td>Fan</td>
-                            <td><span style="color: #ef4444;">OFF</span></td>
-                            <td>Auto</td>
-                        </tr>
-                        <tr>
-                            <td>25/8/2025 12:30:00</td>
-                            <td>Light Bulb</td>
-                            <td><span style="color: #10b981;">ON</span></td>
-                            <td>User</td>
-                        </tr>
-                        <tr>
-                            <td>25/8/2025 12:00:45</td>
-                            <td>Air Conditioner</td>
-                            <td><span style="color: #ef4444;">OFF</span></td>
-                            <td>Auto</td>
-                        </tr>
-                        <tr>
-                            <td>25/8/2025 11:45:30</td>
-                            <td>Fan</td>
-                            <td><span style="color: #10b981;">ON</span></td>
-                            <td>User</td>
-                        </tr>
-                        <tr>
-                            <td>25/8/2025 11:30:15</td>
-                            <td>Light Bulb</td>
-                            <td><span style="color: #ef4444;">OFF</span></td>
-                            <td>Auto</td>
-                        </tr>
-                        <tr>
-                            <td>25/8/2025 11:00:00</td>
-                            <td>Air Conditioner</td>
-                            <td><span style="color: #10b981;">ON</span></td>
-                            <td>User</td>
-                        </tr>
-                        <tr>
-                            <td>25/8/2025 10:45:45</td>
-                            <td>Fan</td>
-                            <td><span style="color: #ef4444;">OFF</span></td>
-                            <td>Auto</td>
-                        </tr>
-                        <tr>
-                            <td>25/8/2025 10:30:30</td>
-                            <td>Light Bulb</td>
-                            <td><span style="color: #10b981;">ON</span></td>
-                            <td>User</td>
-                        </tr>
+                        </tr> -->
                     </tbody>
                 </table>
             </div>
@@ -269,15 +197,7 @@
             </div>
         </div>
     </div>
-    <script>
-        function openProfileModal() {
-            document.getElementById('profileModal').classList.add('show');
-        }
-
-        function closeProfileModal() {
-            document.getElementById('profileModal').classList.remove('show');
-        }
-    </script>
+    <script src="assets/js/profilemodal.js"></script>
 
     <script>
     // ======================= Pagination core =======================
@@ -403,5 +323,203 @@
     // sensorPager.goTo(3);
     // sensorPager.refresh(); // khi bạn thay đổi tbody (thêm/xóa hàng)
     </script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        /** =============================
+         *  A) DEVICE CARDS (3 thiết bị)
+         *  ============================= */
+        const socket = io();
+
+        // Map tên card -> id trong DB (seed: 1,2,3)
+        const DEVICE_ID = {
+        'Light Bulb': 1,
+        'Fan': 2,
+        'Air Conditioner': 3,
+        };
+
+        function fmtUsage(sec){
+        sec = Number(sec||0);
+        const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60);
+        if (h>0) return `${h}h ${m}m`;
+        if (m>0) return `${m}m`;
+        return `${sec}s`;
+        }
+
+        // Tìm "card" theo title (h3)
+        function findCardByTitle(title){
+        return Array.from(document.querySelectorAll('.card')).find(card => {
+            const h3 = card.querySelector('.devicepage-info h3');
+            return h3 && h3.textContent.trim() === title;
+        });
+        }
+
+        // Cập nhật 1 card
+        function setCardState(title, {status, usage_seconds_today}){
+        const card = findCardByTitle(title);
+        if (!card) return;
+
+        // status badge
+        const badge = card.querySelector('.devicepage-status');
+        if (badge){
+            badge.textContent = status;
+            badge.classList.remove('on-status','off-status');
+            badge.classList.add(status === 'ON' ? 'on-status' : 'off-status');
+        }
+
+        // usage time
+        const usageEl = card.querySelector('.data .data-value');
+        if (usageEl){
+            usageEl.textContent = fmtUsage(usage_seconds_today);
+        }
+
+        // toggle checkbox
+        const chk = card.querySelector('.toggle-switch input[type="checkbox"]');
+        if (chk) chk.checked = (status === 'ON');
+        }
+
+        // Gắn handler toggle cho tất cả checkbox
+        function wireCardToggles(){
+        document.querySelectorAll('.card').forEach(card=>{
+            const titleEl = card.querySelector('.devicepage-info h3');
+            const chk = card.querySelector('.toggle-switch input[type="checkbox"]');
+            if (!titleEl || !chk) return;
+            const title = titleEl.textContent.trim();
+            const id = DEVICE_ID[title];
+            if (!id) return;
+
+            chk.addEventListener('change', async (e)=>{
+            const status = e.target.checked ? 'ON' : 'OFF';
+            try{
+                await fetch('/api/devices/toggle', {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ id, status })
+                });
+                // tạm set UI, sẽ được đồng bộ lại khi ESP gửi ACK (devices:update)
+                setCardState(title, { status });
+            }catch(err){
+                console.error(err);
+                e.target.checked = !e.target.checked; // rollback
+                alert('Toggle thất bại');
+            }
+            });
+        });
+        }
+
+        // Nạp danh sách thiết bị ban đầu
+        async function loadDevices(){
+        try{
+            const res = await fetch('/api/devices');
+            const devices = await res.json(); // [{id,name,status,usage_seconds_today,usage_date,...}]
+            // build map theo id
+            const byId = {}; devices.forEach(d=> byId[d.id]=d);
+
+            // áp vào 3 card
+            Object.entries(DEVICE_ID).forEach(([title, id])=>{
+            const d = byId[id];
+            if (!d) return;
+            setCardState(title, d);
+            });
+
+            // gắn toggle
+            wireCardToggles();
+        }catch(e){
+            console.warn('loadDevices failed', e);
+        }
+        }
+        loadDevices();
+
+        // Realtime: đồng bộ card khi có ACK
+        socket.on('devices:update', payload=>{
+        // payload: { id, name, status, usage_seconds_today, usage_date }
+        const title = Object.keys(DEVICE_ID).find(k => DEVICE_ID[k] === payload.id);
+        if (!title) return;
+        setCardState(title, payload);
+        });
+
+
+        /** ======================================
+         *  B) HISTORY TABLE: Search / Filter / Page size
+         *  ====================================== */
+        // Lưu snapshot dữ liệu ban đầu của bảng để filter/paginate
+        const historyTbody = document.getElementById('ActionHistoryTable');
+        let historyRowsData = []; // [{time, device, status, actionBy, html}]
+
+        function snapshotHistoryTable(){
+        historyRowsData = Array.from(historyTbody.querySelectorAll('tr')).map(tr=>{
+            const tds = tr.querySelectorAll('td');
+            const obj = {
+            time:     (tds[0]?.innerText || '').trim(),
+            device:   (tds[1]?.innerText || '').trim(),
+            status:   (tds[2]?.innerText || '').trim(), // ON / OFF (đã có span color)
+            actionBy: (tds[3]?.innerText || '').trim(),
+            html:     tr.outerHTML
+            };
+            return obj;
+        });
+        }
+        snapshotHistoryTable();
+
+        // Chuẩn hoá value cho select (sửa HTML của bạn một chút cho đúng value):
+        // <option value="all">All</option>
+        // <option value="time">Time</option>
+        // <option value="device">Device</option>
+        // <option value="status">Status</option>
+        // <option value="actionby">Action By</option>
+
+        // Nếu chưa sửa HTML, mình sẽ "sửa tạm" trên JS để map value sai -> đúng
+        function normalizeKind(v){
+        // các value sai trong HTML gốc: temperature/humidity/light
+        if (v === 'temperature') return 'time';
+        if (v === 'humidity')    return 'device';
+        if (v === 'light')       return 'status'; // có 2 option 'light', option thứ 2 là "Action By" → xử lý bên dưới
+        return v; // all/time/device/status/actionby
+        }
+
+        function filterTable(){
+        const qRaw  = document.getElementById('searchInput').value || '';
+        const kind0 = document.getElementById('dataTypeSelect').value;
+        const q = qRaw.trim().toLowerCase();
+
+        // Vì trong HTML có 2 option value="light": "Status" và "Action By".
+        // Nếu người dùng chọn option thứ 5 (Action By), ta phát hiện bằng text:
+        const select = document.getElementById('dataTypeSelect');
+        const selectedText = select.options[select.selectedIndex].textContent.trim().toLowerCase();
+
+        let kind = normalizeKind(kind0);
+        if (selectedText === 'action by') kind = 'actionby';
+
+        // Lọc theo cột được chọn
+        const matches = historyRowsData.filter(row=>{
+            let haystack = '';
+            if (kind === 'time')      haystack = row.time;
+            else if (kind === 'device')   haystack = row.device;
+            else if (kind === 'status')   haystack = row.status;
+            else if (kind === 'actionby') haystack = row.actionBy;
+            else                          haystack = `${row.time} ${row.device} ${row.status} ${row.actionBy}`;
+            return haystack.toLowerCase().includes(q);
+        });
+
+        // Render lại tbody rồi refresh pager
+        historyTbody.innerHTML = matches.map(r => r.html).join('');
+        if (typeof sensorPager !== 'undefined' && sensorPager?.refresh) {
+            sensorPager.refresh();
+        }
+        }
+
+        // Change page size select
+        function changePageSize(){
+        const n = Number(document.getElementById('pageSizeSelect').value || 10);
+        if (typeof sensorPager !== 'undefined' && sensorPager?.setRowsPerPage) {
+            sensorPager.setRowsPerPage(n);
+        }
+        }
+
+        // Gán sự kiện (phòng khi HTML bỏ inline handler)
+        document.getElementById('searchInput').addEventListener('input', filterTable);
+        document.getElementById('dataTypeSelect').addEventListener('change', filterTable);
+        document.getElementById('pageSizeSelect').addEventListener('change', changePageSize);
+    </script>
+
 </body>
 </html>
