@@ -126,18 +126,23 @@
                             <option value="time">Time</option>
                             <option value="device">Device</option>
                             <option value="status">Status</option>
-                            <option value="actionby">Action By</option>
+                            <option value="actionbt">Action By</option>
                         </select>
                     </div>
                 </div>
-                <div class="page-size">
-                    <label for="pageSizeSelect">Rows per page:</label>
-                    <select id="pageSizeSelect" onchange="changePageSize()">
-                        <option value="5">5</option>
-                        <option value="10" selected>10</option>
-                        <option value="20">20</option>
-                        <option value="50">50</option>
-                    </select>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="refresh-button">
+                        <button class="btn" onclick="location.reload()" aria-label="Làm mới trang"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+                    </div>
+                    <div class="page-size">
+                        <label for="pageSizeSelect">Rows per page:</label>
+                        <select id="pageSizeSelect" onchange="changePageSize()">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -355,26 +360,26 @@
 
         // Cập nhật 1 card
         function setCardState(title, {status, usage_seconds_today}){
-        const card = findCardByTitle(title);
-        if (!card) return;
+            const card = findCardByTitle(title);
+            if (!card) return;
 
-        // status badge
-        const badge = card.querySelector('.devicepage-status');
-        if (badge){
-            badge.textContent = status;
-            badge.classList.remove('on-status','off-status');
-            badge.classList.add(status === 'ON' ? 'on-status' : 'off-status');
-        }
+            // status badge
+            const badge = card.querySelector('.devicepage-status');
+            if (badge){
+                badge.textContent = status;
+                badge.classList.remove('on-status','off-status');
+                badge.classList.add(status === 'ON' ? 'on-status' : 'off-status');
+            }
 
-        // usage time
-        const usageEl = card.querySelector('.data .data-value');
-        if (usageEl){
-            usageEl.textContent = fmtUsage(usage_seconds_today);
-        }
+            // usage time
+            const usageEl = card.querySelector('.data .data-value');
+            if (usageEl){
+                usageEl.textContent = fmtUsage(usage_seconds_today);
+            }
 
-        // toggle checkbox
-        const chk = card.querySelector('.toggle-switch input[type="checkbox"]');
-        if (chk) chk.checked = (status === 'ON');
+            // toggle checkbox
+            const chk = card.querySelector('.toggle-switch input[type="checkbox"]');
+            if (chk) chk.checked = (status === 'ON');
         }
 
         // Gắn handler toggle cho tất cả checkbox
@@ -446,35 +451,61 @@
         let historyRowsData = []; // [{time, device, status, actionBy, html}]
 
         function snapshotHistoryTable(){
-        historyRowsData = Array.from(historyTbody.querySelectorAll('tr')).map(tr=>{
-            const tds = tr.querySelectorAll('td');
-            const obj = {
-            time:     (tds[0]?.innerText || '').trim(),
-            device:   (tds[1]?.innerText || '').trim(),
-            status:   (tds[2]?.innerText || '').trim(), // ON / OFF (đã có span color)
-            actionBy: (tds[3]?.innerText || '').trim(),
-            html:     tr.outerHTML
-            };
-            return obj;
-        });
+            historyRowsData = Array.from(historyTbody.querySelectorAll('tr')).map(tr=>{
+                const tds = tr.querySelectorAll('td');
+                const obj = {
+                time:     (tds[0]?.innerText || '').trim(),
+                device:   (tds[1]?.innerText || '').trim(),
+                status:   (tds[2]?.innerText || '').trim(), // ON / OFF (đã có span color)
+                actionBy: (tds[3]?.innerText || '').trim(),
+                html:     tr.outerHTML
+                };
+                return obj;
+            });
         }
         snapshotHistoryTable();
 
-        // Chuẩn hoá value cho select (sửa HTML của bạn một chút cho đúng value):
-        // <option value="all">All</option>
-        // <option value="time">Time</option>
-        // <option value="device">Device</option>
-        // <option value="status">Status</option>
-        // <option value="actionby">Action By</option>
+        // ====== (THÊM MỚI) Map id -> title để hiển thị tên thiết bị ======
+        const ID_TO_TITLE = Object.fromEntries(Object.entries(DEVICE_ID).map(([title,id]) => [id, title]));
 
-        // Nếu chưa sửa HTML, mình sẽ "sửa tạm" trên JS để map value sai -> đúng
-        function normalizeKind(v){
-        // các value sai trong HTML gốc: temperature/humidity/light
-        if (v === 'temperature') return 'time';
-        if (v === 'humidity')    return 'device';
-        if (v === 'light')       return 'status'; // có 2 option 'light', option thứ 2 là "Action By" → xử lý bên dưới
-        return v; // all/time/device/status/actionby
+        // ====== (THÊM MỚI) Render dữ liệu lịch sử vào bảng ======
+        function renderHistoryFromApiRows(rows){
+        const html = rows.map(r => {
+            // r: { id, deviceId, status, time, actionBy? }
+            const dt = new Date(r.time || Date.now());
+            const deviceName = r.device || ID_TO_TITLE[r.deviceId] || ('Device #' + r.deviceId);
+            const color = r.status === 'ON' ? '#10b981' : '#ef4444';
+            return `
+            <tr>
+                <td>${dt.toLocaleString()}</td>
+                <td>${deviceName}</td>
+                <td><span style="color:${color};font-weight:600">${r.status}</span></td>
+                <td>${r.actionBy || 'System'}</td>
+            </tr>
+            `;
+        }).join('');
+
+        historyTbody.innerHTML = html;
+
+        // Cập nhật snapshot cho filter/pager
+        snapshotHistoryTable();
+            if (typeof sensorPager !== 'undefined' && sensorPager?.refresh) {
+                sensorPager.refresh();
+            }
         }
+
+        // ====== (THÊM MỚI) Gọi API lấy lịch sử ======
+        async function loadActionHistory(){
+            try{
+                const res = await fetch('/api/devices/action_history');
+                const data = await res.json(); // [{id, deviceId, status, time, actionBy?}, ...]
+                renderHistoryFromApiRows(data);
+            }catch(e){
+                console.warn('Load action history failed:', e);
+            }
+        }
+        // Gọi ngay để đổ bảng
+        loadActionHistory();
 
         function filterTable(){
         const qRaw  = document.getElementById('searchInput').value || '';
@@ -486,7 +517,7 @@
         const select = document.getElementById('dataTypeSelect');
         const selectedText = select.options[select.selectedIndex].textContent.trim().toLowerCase();
 
-        let kind = normalizeKind(kind0);
+        let kind = kind0;
         if (selectedText === 'action by') kind = 'actionby';
 
         // Lọc theo cột được chọn
@@ -519,6 +550,8 @@
         document.getElementById('searchInput').addEventListener('input', filterTable);
         document.getElementById('dataTypeSelect').addEventListener('change', filterTable);
         document.getElementById('pageSizeSelect').addEventListener('change', changePageSize);
+
+        
     </script>
 
 </body>

@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { Device } from '../models/index.js';
+import { ActionHistory, Device } from '../models/index.js';
 import { publishDeviceCommand } from '../services/mqttService.js';
 
 const toggleSchema = Joi.object({
@@ -29,5 +29,17 @@ export default {
 
     const info = await publishDeviceCommand(value);
     res.json({ ok: true, info });
+  },
+
+  getActionHistory: async (req, res) => {
+    try {
+      const actionHistory = await ActionHistory.findAll({
+        order: [['time', 'DESC']]   // sắp xếp mới nhất trước
+      });
+      res.json(actionHistory);
+    } catch (error) {
+      console.error("Lỗi khi lấy action history:", error);
+      res.status(500).json({ message: "Lỗi server" });
+    }
   }
 };
