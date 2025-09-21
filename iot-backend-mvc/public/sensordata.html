@@ -53,7 +53,7 @@
                     <div class="sensor-card">
                         <div class="sensor-info">
                             <h3>Temperature</h3>
-                            <div class="sensor-value" id="temp-current">25.5°C</div>
+                            <div class="sensor-value" id="temp">25.5°C</div>
                         </div>
                         <div class="sensor-icon temp-icon"><i class="bi bi-thermometer icon-bg"></i></div>
                     </div>
@@ -76,7 +76,7 @@
                     <div class="sensor-card">
                         <div class="sensor-info">
                             <h3>Humidity</h3>
-                            <div class="sensor-value" id="humid-current">65%</div>
+                            <div class="sensor-value" id="humid">65%</div>
                         </div>
                         <div class="sensor-icon humid-icon"><i class="bi bi-droplet humid-icon"></i></div>
                     </div>
@@ -99,7 +99,7 @@
                     <div class="sensor-card">
                         <div class="sensor-info">
                             <h3>Light Level</h3>
-                            <div class="sensor-value" id="light-current" >750 lux</div>
+                            <div class="sensor-value" id="light" >750 lux</div>
                         </div>
                         <div class="sensor-icon light-icon"><i class="bi bi-brightness-high-fill light-icon"></i></div>
                     </div>
@@ -209,6 +209,8 @@
             </div>
         </div>
     </div>
+    <!-- Icon -->
+    <script src="assets/js/sensoricon.js"></script>
     <script src="assets/js/profilemodal.js"></script>
     <script>
         // ======================= Pagination core =======================
@@ -373,9 +375,9 @@
             const t = numberOrNull(rowLatest.temp);
             const h = numberOrNull(rowLatest.humid);
             const l = numberOrNull(rowLatest.light);
-            if (t!=null) document.getElementById('temp-current').innerText   = `${t.toFixed(1)}°C`;
-            if (h!=null) document.getElementById('humid-current').innerText  = `${h.toFixed(1)}%`;
-            if (l!=null) document.getElementById('light-current').innerText  = `${l.toFixed(1)} lux`;
+            if (t!=null) document.getElementById('temp').innerText   = `${t.toFixed(1)}°C`;
+            if (h!=null) document.getElementById('humid').innerText  = `${h.toFixed(1)}%`;
+            if (l!=null) document.getElementById('light').innerText  = `${l.toFixed(1)} lux`;
         }
 
         function recomputeTodayStats(){
@@ -490,9 +492,9 @@
             const t = numberOrNull(row.temp);
             const h = numberOrNull(row.humid);
             const l = numberOrNull(row.light);
-            if (t!=null) document.getElementById('temp-current').innerText  = `${t.toFixed(1)}°C`;
-            if (h!=null) document.getElementById('humid-current').innerText = `${h.toFixed(1)}%`;
-            if (l!=null) document.getElementById('light-current').innerText = `${l.toFixed(1)} lux`;
+            if (t!=null) document.getElementById('temp').innerText  = `${t.toFixed(1)}°C`;
+            if (h!=null) document.getElementById('humid').innerText = `${h.toFixed(1)}%`;
+            if (l!=null) document.getElementById('light').innerText = `${l.toFixed(1)} lux`;
 
             if (!isToday) return; // không xét high/low nếu bản ghi không thuộc hôm nay
 
