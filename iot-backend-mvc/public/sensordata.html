@@ -40,7 +40,7 @@
         <div class="header">
             <h1 class="page-title" id="pageTitle">Dashboard</h1>
             <div class="profile-section" onclick="openProfileModal()">
-                <div class="profile-avatar">H</div>
+                <div class="profile-avatar"><img src="assets/images/IMG_20250919_024807_936.jpg" alt=""></div>
                 <span class="profile-name">Nông Thanh Hải</span>
             </div>
         </div>
@@ -60,15 +60,15 @@
                     <div class="data-stat">
                         <div class="data">
                             <span>Highest</span>
-                            <span class="data-value" id="temp-high">25.5°C</span>
+                            <span class="data-value" id="temp-high">--°C</span>
                         </div>
                         <div class="data">
                             <span>Lowest</span>
-                            <span class="data-value" id="temp-low">25.5°C</span>
+                            <span class="data-value" id="temp-low">--°C</span>
                         </div>
                         <div class="data">
                             <span>Average</span>
-                            <span class="data-value" id="temp-avg">25.5°C</span>
+                            <span class="data-value" id="temp-avg">--°C</span>
                         </div>
                     </div>
                 </div>
@@ -83,15 +83,15 @@
                     <div class="data-stat">
                         <div class="data">
                             <span>Highest</span>
-                            <span class="data-value" id="humid-high">65%</span>
+                            <span class="data-value" id="humid-high">--%</span>
                         </div>
                         <div class="data">
                             <span>Lowest</span>
-                            <span class="data-value" id="humid-low">65%</span>
+                            <span class="data-value" id="humid-low">--%</span>
                         </div>
                         <div class="data">
                             <span>Average</span>
-                            <span class="data-value" id="humid-avg">65%</span>
+                            <span class="data-value" id="humid-avg">--%</span>
                         </div>
                     </div>
                 </div>
@@ -106,15 +106,15 @@
                     <div class="data-stat">
                         <div class="data">
                             <span>Highest</span>
-                            <span class="data-value" id="light-high">750 lux</span>
+                            <span class="data-value" id="light-high">-- lux</span>
                         </div>
                         <div class="data">
                             <span>Lowest</span>
-                            <span class="data-value" id="light-low">750 lux</span>
+                            <span class="data-value" id="light-low">-- lux</span>
                         </div>
                         <div class="data">
                             <span>Average</span>
-                            <span class="data-value" id="light-avg">750 lux</span>
+                            <span class="data-value" id="light-avg">-- lux</span>
                         </div>
                     </div>
                 </div>
@@ -124,11 +124,11 @@
             <div class="search-selectbar">
                 <div class="search">
                     <div class="search-bar">
-                        <input type="text" id="searchInput" placeholder="Search..." onkeyup="filterTable()">
-                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" id="searchInput" placeholder="Search...">
+                        <i class="bi bi-search search-icon" id="searchBtn"></i>
                     </div>
                     <div class="select-bar">
-                        <select id="dataTypeSelect" onchange="filterTable()">
+                        <select id="dataTypeSelect">
                             <option value="all">All</option>
                             <option value="time">Time</option>
                             <option value="temperature">Temperature</option>
@@ -159,18 +159,18 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Time</th>
-                            <th>Temperature (°C)</th>
-                            <th>Humidity (%)</th>
-                            <th>Light Level (lux)</th>
+                            <th class="inactive" data-sort="temp">Temperature (°C)</th>
+                            <th class="inactive" data-sort="humid">Humidity (%)</th>
+                            <th class="inactive" data-sort="light">Light Level (lux)</th>
+                            <th class="inactive" data-sort="measured_at">Time</th>
                         </tr>
                     </thead>
                     <tbody id="sensorDataTable">
                         <!-- <tr>
-                            <td>25/8/2025 08:00:00</td>
                             <td>23.5</td>
                             <td>68</td>
                             <td>450</td>
+                            <td>25/8/2025 08:00:00</td>
                         </tr> -->
                     </tbody>
                 </table>
@@ -195,16 +195,18 @@
                 <button class="close-btn" onclick="closeProfileModal()">&times;</button>
             </div>
             <div class="profile-modal-content">
-                <div class="profile-modal-avatar">H</div>
+                <div class="profile-modal-avatar"><img src="assets/images/IMG_20250919_024807_936.jpg" alt=""></div>
                 <div class="profile-info">
                     <h2>Nông Thanh Hải</h2>
                     <p><strong>Mã Sinh Viên:</strong> B22DCCN264</p>
+                    <p><strong>CCCD:</strong> 019204000327</p>
                     <p><strong>Email:</strong> nthanhhai594@gmail.com</p>
-                    
+                    <p><strong>Số điện thoại:</strong> 0969174272</p>
                 </div>
                 <div class="profile-links">
-                    <a href="https://github.com" target="_blank">GitHub</a>
-                    <a href="#" onclick="alert('Link PDF sẽ được cập nhật')">PDF</a>
+                    <a href="#"><img src="assets/images/github.jpg" onclick="alert('Updating')" alt=""></a>
+                    <a href="#"><img src="assets/images/PDF.png" onclick="alert('Updating')" alt=""></a>
+                    <a href="#"><img src="assets/images/apidoc.png" onclick="alert('Updating')" alt=""></a>
                 </div>
             </div>
         </div>
@@ -339,6 +341,134 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
+        function numberOrNull(v) { const n = Number(v); return isNaN(n) ? null : n; }
+
+        // ========= DOM refs =========
+        const searchInput    = document.getElementById('searchInput');
+        const dataTypeSelect = document.getElementById('dataTypeSelect');
+        const searchBtn      = document.getElementById("searchBtn");
+        const pageSizeSelect = document.getElementById('pageSizeSelect');
+        const tbody          = document.getElementById('sensorDataTable');
+
+        // ========= Renderers =========
+        function renderTable(rows) {
+        tbody.innerHTML = rows.map(r => `
+            <tr>
+            <td>${Number(r.temp).toFixed(1)}</td>
+            <td>${Number(r.humid).toFixed(1)}</td>
+            <td>${Number(r.light).toFixed(1)}</td>
+            <td>${r.measured_at}</td>
+            </tr>
+        `).join('');
+            if (typeof sensorPager !== "undefined" && sensorPager?.refresh) {
+                sensorPager.refresh();
+            }
+        }
+
+        function renderCardsCurrent(rowLatest) {
+        if (!rowLatest) return;
+            const t = numberOrNull(rowLatest.temp);
+            const h = numberOrNull(rowLatest.humid);
+            const l = numberOrNull(rowLatest.light);
+            if (t!=null) document.getElementById('temp').innerText   = `${t.toFixed(1)}°C`;
+            if (h!=null) document.getElementById('humid').innerText  = `${h.toFixed(1)}%`;
+            if (l!=null) document.getElementById('light').innerText  = `${l.toFixed(1)} lux`;
+        }
+
+        // ========= API Loader =========
+        async function loadTable({ search="", field="all", sort="measured_at", order="desc", page=1, limit=5000 } = {}) {
+            try {
+                const url = `/api/sensors?search=${encodeURIComponent(search)}&field=${field}&sort=${sort}&order=${order}&page=${page}&limit=${limit}`;
+                const res = await fetch(url);
+                const rows = await res.json();
+
+                // if (updateCurrent && rows.length > 0) {
+                //     renderCardsCurrent(rows[0]); // chỉ khi cần mới update current
+                // }
+                renderTable(rows);
+            } catch (err) {
+                console.error("Load sensors failed", err);
+            }
+        }
+
+        // ========= UI Events =========
+        // Ấn Enter
+        searchInput.addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                loadTable({ 
+                search: searchInput.value, 
+                field: dataTypeSelect.value, 
+                });
+            }
+        });
+
+        // Click icon search
+        searchBtn.addEventListener("click", function() {
+            loadTable({ 
+                search: searchInput.value, 
+                field: dataTypeSelect.value,   
+            });
+        });
+        // Chọn loại dữ liệu
+        dataTypeSelect.addEventListener("change", function() {
+            loadTable({ 
+                search: searchInput.value, 
+                field: dataTypeSelect.value,  
+            });
+        });
+        pageSizeSelect.addEventListener("change", () => {
+            if (typeof sensorPager !== "undefined" && sensorPager?.setRowsPerPage) {
+                sensorPager.setRowsPerPage(Number(pageSizeSelect.value || 10));
+            }
+        });
+
+        // sort khi click header
+        // ========= Sort khi click header =========
+        document.querySelectorAll("thead th").forEach(th => {
+            th.addEventListener("click", () => {
+            const field = th.dataset.sort || "measured_at";
+            let newOrder;
+
+            if (th.classList.contains("asc")) {
+                resetOthers(th);
+                th.classList.remove("asc");
+                th.classList.add("desc");
+                newOrder = "desc";
+            } else if (th.classList.contains("desc")) {
+                resetOthers(th);
+                th.classList.remove("desc");
+                th.classList.add("asc");
+                newOrder = "asc";
+            } else {
+                resetOthers(th);
+                th.classList.remove("inactive");
+                th.classList.add("asc");
+                newOrder = "asc";
+            }
+            loadTable({
+                search: searchInput.value,
+                field: dataTypeSelect.value,
+                sort: field,
+                order: newOrder
+            });
+            });
+        });
+
+        function resetOthers(activeTh) {
+            document.querySelectorAll("thead th").forEach(col => {
+            if (col !== activeTh) {
+                col.classList.remove("asc", "desc");
+                col.classList.add("inactive");
+            }
+            });
+        }
+
+        // ========= Initial load =========
+        loadTable();
+    </script>
+    <script src="assets/js/sensor-realtime.js"></script>
+    <!-- <script>
+        const socket = io();
 
         // ========= Utils =========
         function fmtTime(d){
@@ -358,11 +488,11 @@
         let todayRows = [];     // dữ liệu hôm nay (chỉ để tính initial stats)
 
         // High/Low hôm nay sẽ lưu ở đây để so sánh realtime
-        const currentStats = {
-            temp:  { hi: null, lo: null },
-            humid: { hi: null, lo: null },
-            light: { hi: null, lo: null }
-        };
+        // const currentStats = {
+        //     temp:  { hi: null, lo: null },
+        //     humid: { hi: null, lo: null },
+        //     light: { hi: null, lo: null }
+        // };
 
         const searchInput    = document.getElementById('searchInput');
         const dataTypeSelect = document.getElementById('dataTypeSelect');
@@ -530,7 +660,7 @@
             }
             }
         });
-    </script>
+    </script> -->
 
 
 </body>
