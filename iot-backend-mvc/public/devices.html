@@ -40,7 +40,7 @@
         <div class="header">
             <h1 class="page-title" id="pageTitle">Dashboard</h1>
             <div class="profile-section" onclick="openProfileModal()">
-                <div class="profile-avatar"><img src="assets/images/IMG_20250919_024807_936.jpg" alt=""></div>
+                <div class="profile-avatar"><img src="assets/images/Anhthe.jpg" alt=""></div>
                 <span class="profile-name">Nông Thanh Hải</span>
             </div>
         </div>
@@ -117,11 +117,11 @@
             <div class="search-selectbar">
                 <div class="search">
                     <div class="search-bar">
-                        <input type="text" id="searchInput" placeholder="Search..." onkeyup="filterTable()">
+                        <input type="text" id="searchInput" placeholder="Search...">
                         <i class="bi bi-search search-icon"></i>
                     </div>
                     <div class="select-bar">
-                        <select id="dataTypeSelect" onchange="filterTable()">
+                        <select id="dataTypeSelect">
                             <option value="all">All</option>
                             <option value="time">Time</option>
                             <option value="device">Device</option>
@@ -152,10 +152,10 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Time</th>
-                            <th>Device</th>
-                            <th>Status</th>
-                            <th>Action By</th>
+                            <th class="inactive" data-sort="time">Time</th>
+                            <th class="inactive" data-sort="device">Device</th>
+                            <th class="inactive" data-sort="status">Status</th>
+                            <th class="inactive" data-sort="actionby">Action By</th>
                         </tr>
                     </thead>
                     <tbody id="ActionHistoryTable">
@@ -188,7 +188,7 @@
                 <button class="close-btn" onclick="closeProfileModal()">&times;</button>
             </div>
             <div class="profile-modal-content">
-                <div class="profile-modal-avatar"><img src="assets/images/IMG_20250919_024807_936.jpg" alt=""></div>
+                <div class="profile-modal-avatar"><img src="assets/images/Anhthe.jpg" alt=""></div>
                 <div class="profile-info">
                     <h2>Nông Thanh Hải</h2>
                     <p><strong>Mã Sinh Viên:</strong> B22DCCN264</p>
@@ -206,355 +206,140 @@
     </div>
     <script src="assets/js/profilemodal.js"></script>
 
-    <script>
-    // ======================= Pagination core =======================
-    function createTablePager({
-    tbodyId,
-    paginationId,
-    prevId,
-    nextId,
-    pageInfoId,
-    rowsPerPage = 10
-    }){
-    const tbody = document.getElementById(tbodyId);
-    const pagination = document.getElementById(paginationId);
-    const prevBtn = document.getElementById(prevId);
-    const nextBtn = document.getElementById(nextId);
-    const pageInfo = document.getElementById(pageInfoId);
-
-    if (!tbody || !pagination || !prevBtn || !nextBtn || !pageInfo) {
-        console.warn('[Pager] Missing required element(s).');
-        return null;
-    }
-
-    let rows = Array.from(tbody.querySelectorAll('tr'));
-    let currentPage = 1;
-
-    function clamp(v, min, max) { return Math.min(Math.max(v, min), max); }
-
-    function buildPageList(curr, total){
-        // Trường hợp ít trang: hiển thị tất cả
-        if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
-
-        const list = [1];
-        if (curr > 3) list.push('...');
-
-        const start = Math.max(2, curr - 1);
-        const end   = Math.min(total - 1, curr + 1);
-        for (let i = start; i <= end; i++) list.push(i);
-
-        if (curr < total - 2) list.push('...');
-        list.push(total);
-        return list;
-    }
-
-    function drawPagination(pageCount){
-        pagination.innerHTML = '';
-
-        const pages = buildPageList(currentPage, pageCount);
-        pages.forEach(p => {
-        if (p === '...'){
-            const span = document.createElement('span');
-            span.textContent = '…';
-            span.className = 'dots';
-            pagination.appendChild(span);
-        } else {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.textContent = p;
-            if (p === currentPage) btn.classList.add('active');
-            btn.addEventListener('click', () => renderPage(p));
-            pagination.appendChild(btn);
-        }
-        });
-    }
-
-    function renderPage(page){
-        rows = Array.from(tbody.querySelectorAll('tr')); // đề phòng thêm/xóa dòng động
-        const totalRows = rows.length;
-        const pageCount = Math.max(1, Math.ceil(totalRows / rowsPerPage));
-        currentPage = clamp(page, 1, pageCount);
-
-        const start = (currentPage - 1) * rowsPerPage;
-        const end = Math.min(start + rowsPerPage, totalRows);
-
-        rows.forEach((tr, i) => {
-        tr.style.display = (i >= start && i < end) ? '' : 'none';
-        });
-
-        // Cập nhật thanh số trang + nút prev/next
-        drawPagination(pageCount);
-        prevBtn.disabled = currentPage === 1;
-        nextBtn.disabled = currentPage === pageCount;
-
-        // Cập nhật "Hiển thị a–b / n"
-        pageInfo.textContent = totalRows
-        ? `Hiển thị ${start + 1}–${end} / ${totalRows}`
-        : 'Không có dữ liệu';
-    }
-
-    // Sự kiện Prev/Next
-    prevBtn.addEventListener('click', () => renderPage(currentPage - 1));
-    nextBtn.addEventListener('click', () => renderPage(currentPage + 1));
-
-    // API public
-    const api = {
-        refresh(){ renderPage(1); },
-        goTo(p){ renderPage(Number(p) || 1); },
-        setRowsPerPage(n){
-        rowsPerPage = Math.max(1, Number(n) || rowsPerPage);
-        renderPage(1);
-        },
-        get currentPage(){ return currentPage; },
-        get totalRows(){ return tbody.querySelectorAll('tr').length; }
-    };
-
-    // Khởi tạo
-    renderPage(1);
-    return api;
-    }
-
-    // ======================= Init for your table =======================
-    // Gọi sau khi DOM sẵn sàng (đặt script cuối body là được)
-    const sensorPager = createTablePager({
-    tbodyId: 'ActionHistoryTable',
-    paginationId: 'pagination',
-    prevId: 'prevPage',
-    nextId: 'nextPage',
-    pageInfoId: 'pageInfo',
-    rowsPerPage: 10   // đổi ở chỗ khác bằng sensorPager.setRowsPerPage(20)
-    });
-
-    // Ví dụ dùng API (nếu cần):
-    // sensorPager.setRowsPerPage(20);
-    // sensorPager.goTo(3);
-    // sensorPager.refresh(); // khi bạn thay đổi tbody (thêm/xóa hàng)
+    <script src="assets/js/paginition.js">
     </script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        /** =============================
-         *  A) DEVICE CARDS (3 thiết bị)
-         *  ============================= */
-        const socket = io();
+/** ================================
+ *  ACTION HISTORY SCRIPT
+ *  ================================ */
 
-        // Map tên card -> id trong DB (seed: 1,2,3)
-        const DEVICE_ID = {
-        'Light Bulb': 1,
-        'Fan': 2,
-        'Air Conditioner': 3,
-        };
+// DOM refs
+const historyTable     = document.querySelector(".data-table table"); // lấy table trong div data-table
+const historyTbody     = document.getElementById("ActionHistoryTable"); // tbody
+const historySearch    = document.getElementById("searchInput");
+const historyField     = document.getElementById("dataTypeSelect");
+const historySearchBtn = document.querySelector(".search-icon"); // dùng icon search
+const historyPageSize  = document.getElementById("pageSizeSelect");
 
-        function fmtUsage(sec){
-        sec = Number(sec||0);
-        const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60);
-        if (h>0) return `${h}h ${m}m`;
-        if (m>0) return `${m}m`;
-        return `${sec}s`;
-        }
+// Render bảng
+function renderHistoryTable(rows = []) {
+  historyTbody.innerHTML = rows.map(r => {
+    const dt = new Date(r.time || Date.now());
+    const deviceName = r.deviceName || r.device || `Device #${r.deviceId}`;
+    const color = r.status === "ON" ? "#10b981" : "#ef4444";
+    return `
+      <tr>
+        <td>${dt.toLocaleString()}</td>
+        <td>${deviceName}</td>
+        <td><span style="color:${color};font-weight:600">${r.status}</span></td>
+        <td>${r.actionBy || "System"}</td>
+      </tr>
+    `;
+  }).join("");
 
-        // Tìm "card" theo title (h3)
-        function findCardByTitle(title){
-        return Array.from(document.querySelectorAll('.card')).find(card => {
-            const h3 = card.querySelector('.devicepage-info h3');
-            return h3 && h3.textContent.trim() === title;
-        });
-        }
+  if (typeof sensorPager !== "undefined" && sensorPager?.refresh) {
+    sensorPager.refresh();
+  }
+}
 
-        // Cập nhật 1 card
-        function setCardState(title, {status, usage_seconds_today}){
-            const card = findCardByTitle(title);
-            if (!card) return;
+// Load dữ liệu từ API
+async function loadActionHistory({
+  search = "",
+  field = "all",
+  sort = "time",
+  order = "desc",
+  page = 1,
+  limit = 50,
+} = {}) {
+  try {
+    const url = `/api/devices/action_history?search=${encodeURIComponent(
+      search
+    )}&field=${field}&sort=${sort}&order=${order}&page=${page}&limit=${limit}`;
+    const res = await fetch(url);
+    const rows = await res.json();
+    renderHistoryTable(rows);
+  } catch (err) {
+    console.error("Load action history failed", err);
+  }
+}
 
-            // status badge
-            const badge = card.querySelector('.devicepage-status');
-            if (badge){
-                badge.textContent = status;
-                badge.classList.remove('on-status','off-status');
-                badge.classList.add(status === 'ON' ? 'on-status' : 'off-status');
-            }
+// ========== Search / Filter ==========
+historySearch.addEventListener("keypress", e => {
+  if (e.key === "Enter") {
+    loadActionHistory({
+      search: historySearch.value,
+      field: historyField.value,
+    });
+  }
+});
 
-            // usage time
-            const usageEl = card.querySelector('.data .data-value');
-            if (usageEl){
-                usageEl.textContent = fmtUsage(usage_seconds_today);
-            }
+historySearchBtn.addEventListener("click", () => {
+  loadActionHistory({
+    search: historySearch.value,
+    field: historyField.value,
+  });
+});
 
-            // toggle checkbox
-            const chk = card.querySelector('.toggle-switch input[type="checkbox"]');
-            if (chk) chk.checked = (status === 'ON');
-        }
+historyField.addEventListener("change", () => {
+  loadActionHistory({
+    search: historySearch.value,
+    field: historyField.value,
+  });
+});
 
-        // Gắn handler toggle cho tất cả checkbox
-        function wireCardToggles(){
-        document.querySelectorAll('.card').forEach(card=>{
-            const titleEl = card.querySelector('.devicepage-info h3');
-            const chk = card.querySelector('.toggle-switch input[type="checkbox"]');
-            if (!titleEl || !chk) return;
-            const title = titleEl.textContent.trim();
-            const id = DEVICE_ID[title];
-            if (!id) return;
+// ========== Page Size ==========
+historyPageSize.addEventListener("change", () => {
+  if (typeof sensorPager !== "undefined" && sensorPager?.setRowsPerPage) {
+    sensorPager.setRowsPerPage(Number(historyPageSize.value || 10));
+  }
+});
 
-            chk.addEventListener('change', async (e)=>{
-            const status = e.target.checked ? 'ON' : 'OFF';
-            try{
-                await fetch('/api/devices/toggle', {
-                method:'POST',
-                headers:{'Content-Type':'application/json'},
-                body: JSON.stringify({ id, status })
-                });
-                // tạm set UI, sẽ được đồng bộ lại khi ESP gửi ACK (devices:update)
-                setCardState(title, { status });
-            }catch(err){
-                console.error(err);
-                e.target.checked = !e.target.checked; // rollback
-                alert('Toggle thất bại');
-            }
-            });
-        });
-        }
+// ========== Sort khi click header ==========
+historyTable.querySelectorAll("thead th").forEach(th => {
+  th.addEventListener("click", () => {
+    const field = th.dataset.sort || "time";
+    let newOrder;
 
-        // Nạp danh sách thiết bị ban đầu
-        async function loadDevices(){
-        try{
-            const res = await fetch('/api/devices');
-            const devices = await res.json(); // [{id,name,status,usage_seconds_today,usage_date,...}]
-            // build map theo id
-            const byId = {}; devices.forEach(d=> byId[d.id]=d);
+    if (th.classList.contains("asc")) {
+      resetHistorySort(th);
+      th.classList.remove("asc");
+      th.classList.add("desc");
+      newOrder = "desc";
+    } else if (th.classList.contains("desc")) {
+      resetHistorySort(th);
+      th.classList.remove("desc");
+      th.classList.add("asc");
+      newOrder = "asc";
+    } else {
+      resetHistorySort(th);
+      th.classList.remove("inactive");
+      th.classList.add("asc");
+      newOrder = "asc";
+    }
 
-            // áp vào 3 card
-            Object.entries(DEVICE_ID).forEach(([title, id])=>{
-            const d = byId[id];
-            if (!d) return;
-            setCardState(title, d);
-            });
+    loadActionHistory({
+      search: historySearch.value,
+      field: historyField.value,
+      sort: field,
+      order: newOrder,
+    });
+  });
+});
 
-            // gắn toggle
-            wireCardToggles();
-        }catch(e){
-            console.warn('loadDevices failed', e);
-        }
-        }
-        loadDevices();
+function resetHistorySort(activeTh) {
+  historyTable.querySelectorAll("thead th").forEach(col => {
+    if (col !== activeTh) {
+      col.classList.remove("asc", "desc");
+      col.classList.add("inactive");
+    }
+  });
+}
 
-        // Realtime: đồng bộ card khi có ACK
-        socket.on('devices:update', payload=>{
-        // payload: { id, name, status, usage_seconds_today, usage_date }
-        const title = Object.keys(DEVICE_ID).find(k => DEVICE_ID[k] === payload.id);
-        if (!title) return;
-        setCardState(title, payload);
-        });
+// ========== Initial load ==========
+loadActionHistory();
+</script>
 
-
-        /** ======================================
-         *  B) HISTORY TABLE: Search / Filter / Page size
-         *  ====================================== */
-        // Lưu snapshot dữ liệu ban đầu của bảng để filter/paginate
-        const historyTbody = document.getElementById('ActionHistoryTable');
-        let historyRowsData = []; // [{time, device, status, actionBy, html}]
-
-        function snapshotHistoryTable(){
-            historyRowsData = Array.from(historyTbody.querySelectorAll('tr')).map(tr=>{
-                const tds = tr.querySelectorAll('td');
-                const obj = {
-                time:     (tds[0]?.innerText || '').trim(),
-                device:   (tds[1]?.innerText || '').trim(),
-                status:   (tds[2]?.innerText || '').trim(), // ON / OFF (đã có span color)
-                actionBy: (tds[3]?.innerText || '').trim(),
-                html:     tr.outerHTML
-                };
-                return obj;
-            });
-        }
-        snapshotHistoryTable();
-
-        // ====== (THÊM MỚI) Map id -> title để hiển thị tên thiết bị ======
-        const ID_TO_TITLE = Object.fromEntries(Object.entries(DEVICE_ID).map(([title,id]) => [id, title]));
-
-        // ====== (THÊM MỚI) Render dữ liệu lịch sử vào bảng ======
-        function renderHistoryFromApiRows(rows){
-        const html = rows.map(r => {
-            // r: { id, deviceId, status, time, actionBy? }
-            const dt = new Date(r.time || Date.now());
-            const deviceName = r.device || ID_TO_TITLE[r.deviceId] || ('Device #' + r.deviceId);
-            const color = r.status === 'ON' ? '#10b981' : '#ef4444';
-            return `
-            <tr>
-                <td>${dt.toLocaleString()}</td>
-                <td>${deviceName}</td>
-                <td><span style="color:${color};font-weight:600">${r.status}</span></td>
-                <td>${r.actionBy || 'System'}</td>
-            </tr>
-            `;
-        }).join('');
-
-        historyTbody.innerHTML = html;
-
-        // Cập nhật snapshot cho filter/pager
-        snapshotHistoryTable();
-            if (typeof sensorPager !== 'undefined' && sensorPager?.refresh) {
-                sensorPager.refresh();
-            }
-        }
-
-        // ====== (THÊM MỚI) Gọi API lấy lịch sử ======
-        async function loadActionHistory(){
-            try{
-                const res = await fetch('/api/devices/action_history');
-                const data = await res.json(); // [{id, deviceId, status, time, actionBy?}, ...]
-                renderHistoryFromApiRows(data);
-            }catch(e){
-                console.warn('Load action history failed:', e);
-            }
-        }
-        // Gọi ngay để đổ bảng
-        loadActionHistory();
-
-        function filterTable(){
-        const qRaw  = document.getElementById('searchInput').value || '';
-        const kind0 = document.getElementById('dataTypeSelect').value;
-        const q = qRaw.trim().toLowerCase();
-
-        // Vì trong HTML có 2 option value="light": "Status" và "Action By".
-        // Nếu người dùng chọn option thứ 5 (Action By), ta phát hiện bằng text:
-        const select = document.getElementById('dataTypeSelect');
-        const selectedText = select.options[select.selectedIndex].textContent.trim().toLowerCase();
-
-        let kind = kind0;
-        if (selectedText === 'action by') kind = 'actionby';
-
-        // Lọc theo cột được chọn
-        const matches = historyRowsData.filter(row=>{
-            let haystack = '';
-            if (kind === 'time')      haystack = row.time;
-            else if (kind === 'device')   haystack = row.device;
-            else if (kind === 'status')   haystack = row.status;
-            else if (kind === 'actionby') haystack = row.actionBy;
-            else                          haystack = `${row.time} ${row.device} ${row.status} ${row.actionBy}`;
-            return haystack.toLowerCase().includes(q);
-        });
-
-        // Render lại tbody rồi refresh pager
-        historyTbody.innerHTML = matches.map(r => r.html).join('');
-        if (typeof sensorPager !== 'undefined' && sensorPager?.refresh) {
-            sensorPager.refresh();
-        }
-        }
-
-        // Change page size select
-        function changePageSize(){
-        const n = Number(document.getElementById('pageSizeSelect').value || 10);
-        if (typeof sensorPager !== 'undefined' && sensorPager?.setRowsPerPage) {
-            sensorPager.setRowsPerPage(n);
-        }
-        }
-
-        // Gán sự kiện (phòng khi HTML bỏ inline handler)
-        document.getElementById('searchInput').addEventListener('input', filterTable);
-        document.getElementById('dataTypeSelect').addEventListener('change', filterTable);
-        document.getElementById('pageSizeSelect').addEventListener('change', changePageSize);
-
-        
-    </script>
 
 </body>
 </html>

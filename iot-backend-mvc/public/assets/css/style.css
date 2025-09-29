@@ -481,6 +481,7 @@ i.ac-on .snow.delay {
         tr:hover {
             background: #f8fafc;
         }
+        
         /* Sorting */
         .desc::after {
             content: " ▼";

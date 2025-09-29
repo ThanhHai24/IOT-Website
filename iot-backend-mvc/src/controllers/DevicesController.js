@@ -1,6 +1,7 @@
 import Joi from 'joi';
 import { ActionHistory, Device } from '../models/index.js';
 import { publishDeviceCommand } from '../services/mqttService.js';
+import { Op, fn, col, literal, where as SequelizeWhere } from "sequelize";
 
 const toggleSchema = Joi.object({
   id: Joi.number().integer().optional(),
@@ -33,13 +34,83 @@ export default {
 
   getActionHistory: async (req, res) => {
     try {
-      const actionHistory = await ActionHistory.findAll({
-        order: [['time', 'DESC']]   // sắp xếp mới nhất trước
+      let {
+        search = "",
+        field = "all",
+        sort = "time",
+        order = "desc",
+        page = 1,
+        limit = 50,
+      } = req.query;
+
+      const validSortFields = ["time", "status", "deviceName"];
+      const validOrders = ["ASC", "DESC"];
+      const sortField = validSortFields.includes(sort) ? sort : "time";
+      const sortOrder = validOrders.includes(order.toUpperCase())
+        ? order.toUpperCase()
+        : "DESC";
+
+      // where cho search
+      const where = {};
+      if (search) {
+        const timeCondition = SequelizeWhere(
+          fn("DATE_FORMAT", col("ActionHistory.time"), "%Y-%m-%d %H:%i:%s"),
+          { [Op.like]: `%${search}%` }
+        );
+
+        if (field === "status") {
+          where[Op.and] = [
+            SequelizeWhere(literal("CAST(`ActionHistory`.`status` AS CHAR)"), {
+              [Op.like]: `%${search}%`,
+            }),
+          ];
+        } else if (field === "device") {
+          where[Op.and] = [
+            SequelizeWhere(literal("CAST(`Device`.`name` AS CHAR)"), {
+              [Op.like]: `%${search}%`,
+            }),
+          ];
+        } else if (field === "time") {
+          where[Op.and] = [timeCondition];
+        } else if (field === "all") {
+          where[Op.or] = [
+            SequelizeWhere(literal("CAST(`ActionHistory`.`status` AS CHAR)"), {
+              [Op.like]: `%${search}%`,
+            }),
+            SequelizeWhere(literal("CAST(`Device`.`name` AS CHAR)"), {
+              [Op.like]: `%${search}%`,
+            }),
+            timeCondition,
+          ];
+        }
+      }
+
+      const rows = await ActionHistory.findAll({
+        where,
+        include: [{ model: Device, attributes: ["name"] }],
+        order: [
+          [
+            sortField === "deviceName" ? col("Device.name") : col(`ActionHistory.${sortField}`),
+            sortOrder,
+          ],
+        ],
+        offset: (page - 1) * limit,
+        limit: Number(limit),
       });
-      res.json(actionHistory);
-    } catch (error) {
-      console.error("Lỗi khi lấy action history:", error);
-      res.status(500).json({ message: "Lỗi server" });
+
+      // format JSON trả về: thêm deviceName
+      const result = rows.map(r => ({
+        id: r.id,
+        deviceId: r.deviceId,
+        deviceName: r.Device?.name || `Device #${r.deviceId}`,
+        status: r.status,
+        time: r.time,
+      }));
+
+      res.json(result);
+    } catch (err) {
+      console.error("Lỗi khi lấy action history:", err);
+      res.status(500).json({ error: err.message });
     }
   }
 };
