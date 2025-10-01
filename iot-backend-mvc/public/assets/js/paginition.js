@@ -108,7 +108,7 @@
         // ======================= Init for your table =======================
         // Gọi sau khi DOM sẵn sàng (đặt script cuối body là được)
         const sensorPager = createTablePager({
-        tbodyId: 'sensorDataTable',
+        tbodyId: 'DataTable',
         paginationId: 'pagination',
         prevId: 'prevPage',
         nextId: 'nextPage',

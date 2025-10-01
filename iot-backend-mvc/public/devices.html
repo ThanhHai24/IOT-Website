@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="assets/css/style.css">
     <title>IoT Dashboard - Device Monitoring & Control</title>
 </head>
@@ -48,65 +49,65 @@
         <div id="devices" class="page active">
             <!-- Device List -->
              <div class="dashboard-grid">
-                <div class="card">
+                <div class="card" id="card-light">
                     <div class="devicepage-card">
                         <div class="devicepage-info">
                             <h3>Light Bulb</h3>
-                            <div class="devicepage-status off-status">OFF</div>
+                            <div class="devicepage-status off-status" id="status-light">OFF</div>
                         </div>
-                        <div class="devicepage-icon"><i class="bi bi-lightbulb-fill"></i></i></div>
+                        <div class="devicepage-icon"><i id="icon-light" class="bi bi-lightbulb-fill"></i></i></div>
                     </div>
                     <div class="data-stat">
                         <div class="data">
                             <span>Usage Time</span>
-                            <span class="data-value">2h 30m</span>
+                            <span class="data-value" id="usage-light">2h 30m</span>
                         </div>
                     </div>
                     <div class="device-controls">
                         <label class="toggle-switch">
-                            <input type="checkbox">
+                            <input type="checkbox" onchange="toggleDevice('light', this)">
                             <span class="slider"></span>
                         </label>
                     </div>
                 </div>
-                <div class="card">
+                <div class="card" id="card-fan">
                     <div class="devicepage-card">
                         <div class="devicepage-info">
                             <h3>Fan</h3>
-                            <div class="devicepage-status off-status">OFF</div>
+                            <div class="devicepage-status off-status" id="status-fan" >OFF</div>
                         </div>
-                        <div class="devicepage-icon"><i class="bi bi-fan"></i></div>
+                        <div class="devicepage-icon"><i id="icon-fan" class="fa-solid fa-fan"></i></div>
                     </div>
                     <div class="data-stat">
                         <div class="data">
                             <span>Usage Time</span>
-                            <span class="data-value">2h 30m</span>
+                            <span class="data-value" id="usage-fan">2h 30m</span>
                         </div>
                     </div>
                     <div class="device-controls">
                         <label class="toggle-switch">
-                            <input type="checkbox">
+                            <input type="checkbox" onchange="toggleDevice('fan', this)">
                             <span class="slider"></span>
                         </label>
                     </div>
                 </div>
-                <div class="card">
+                <div class="card" id="card-ac">
                     <div class="devicepage-card">
                         <div class="devicepage-info">
                             <h3>Air Conditioner</h3>
-                            <div class="devicepage-status on-status">ON</div>
+                            <div class="devicepage-status on-status" id="status-ac">ON</div>
                         </div>
-                        <div class="devicepage-icon"><i class="bi bi-snow2"></i></i></div>
+                        <div class="devicepage-icon"><i id="icon-ac" class="bi bi-snow2"></i></i></div>
                     </div>
                     <div class="data-stat">
                         <div class="data">
                             <span>Usage Time</span>
-                            <span class="data-value">2h 30m</span>
+                            <span class="data-value" id="usage-ac">2h 30m</span>
                         </div>
                     </div>
                     <div class="device-controls">
                         <label class="toggle-switch">
-                            <input type="checkbox">
+                            <input type="checkbox" onchange="toggleDevice('ac', this)">
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -158,7 +159,7 @@
                             <th class="inactive" data-sort="actionby">Action By</th>
                         </tr>
                     </thead>
-                    <tbody id="ActionHistoryTable">
+                    <tbody id="DataTable">
                         <!-- <tr>
                             <td>25/8/2025 14:30:25</td>
                             <td>Light Bulb</td>
@@ -210,134 +211,309 @@
     </script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-/** ================================
- *  ACTION HISTORY SCRIPT
- *  ================================ */
+    const socket = io();
 
-// DOM refs
-const historyTable     = document.querySelector(".data-table table"); // lấy table trong div data-table
-const historyTbody     = document.getElementById("ActionHistoryTable"); // tbody
-const historySearch    = document.getElementById("searchInput");
-const historyField     = document.getElementById("dataTypeSelect");
-const historySearchBtn = document.querySelector(".search-icon"); // dùng icon search
-const historyPageSize  = document.getElementById("pageSizeSelect");
+    // Map tên UI -> id thiết bị trong DB (seed: 1,2,3)
+    const DEVICE_MAP = {
+        light: { id: 1, label: 'Light Bulb' },
+        fan:   { id: 2, label: 'Fan' },
+        ac:    { id: 3, label: 'Air Conditioner' }
+    };
 
-// Render bảng
-function renderHistoryTable(rows = []) {
-  historyTbody.innerHTML = rows.map(r => {
-    const dt = new Date(r.time || Date.now());
-    const deviceName = r.deviceName || r.device || `Device #${r.deviceId}`;
-    const color = r.status === "ON" ? "#10b981" : "#ef4444";
-    return `
-      <tr>
-        <td>${dt.toLocaleString()}</td>
-        <td>${deviceName}</td>
-        <td><span style="color:${color};font-weight:600">${r.status}</span></td>
-        <td>${r.actionBy || "System"}</td>
-      </tr>
-    `;
-  }).join("");
+    // Helpers
+    function fmtUsage(sec){
+        const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;
+        if(h>0) return `${h}h ${m}m`;
+        if(m>0) return `${m}m ${s}s`;
+        return `${s}s`;
+    }
+    function setDeviceStatus(key, status){
+        const span = document.getElementById(`status-${key}`);
+        if(!span) return;
+        span.innerText = status;
+        span.classList.remove('on-status','off-status');
+        span.classList.add(status==='ON'?'on-status':'off-status');
+    }
+    function setDeviceIcon(key, status) {
+        const icon = document.getElementById(`icon-${key}`);
+        if (!icon) return;
 
-  if (typeof sensorPager !== "undefined" && sensorPager?.refresh) {
-    sensorPager.refresh();
-  }
-}
+        const onClass = `${key}-on`;
+        if (status === "ON") {
+            icon.classList.add(onClass);
+            if (key === "ac" && !icon.querySelector(".snow")) {
+            icon.insertAdjacentHTML(
+                "beforeend",
+                '<span class="snow">❄</span><span class="snow delay">❄</span>'
+            );
+            }
+        } else {
+            icon.classList.remove(onClass);
+            if (key === "ac") {
+            icon.querySelectorAll(".snow").forEach((el) => el.remove());
+            }
+        }
+    }
+    function updateUsage(key, seconds) {
+        const usageEl = document.getElementById(`usage-${key}`);
+        if (usageEl) {
+            usageEl.innerText = fmtUsage(seconds || 0);
+        }
+    }
+    function setLoading(key, isLoading) {
+        const card = document.getElementById(`card-${key}`);
+        if (!card) return;
+        if (isLoading) {
+            card.classList.add("loading");
+        } else {
+            card.classList.remove("loading");
+        }
+    }
+    const usageTimers = {};
 
-// Load dữ liệu từ API
-async function loadActionHistory({
-  search = "",
-  field = "all",
-  sort = "time",
-  order = "desc",
-  page = 1,
-  limit = 50,
-} = {}) {
-  try {
-    const url = `/api/devices/action_history?search=${encodeURIComponent(
-      search
-    )}&field=${field}&sort=${sort}&order=${order}&page=${page}&limit=${limit}`;
-    const res = await fetch(url);
-    const rows = await res.json();
-    renderHistoryTable(rows);
-  } catch (err) {
-    console.error("Load action history failed", err);
-  }
-}
+    function startUsageTimer(key, dev) {
+        stopUsageTimer(key); // clear timer cũ
 
-// ========== Search / Filter ==========
-historySearch.addEventListener("keypress", e => {
-  if (e.key === "Enter") {
-    loadActionHistory({
-      search: historySearch.value,
-      field: historyField.value,
-    });
-  }
-});
+        if (dev.status !== "ON") {
+            updateUsage(key, dev.usage_seconds_today || 0);
+            return;
+        }
 
-historySearchBtn.addEventListener("click", () => {
-  loadActionHistory({
-    search: historySearch.value,
-    field: historyField.value,
-  });
-});
+        const base = dev.usage_seconds_today || 0;
+        const lastChanged = dev.last_state_changed_at 
+            ? new Date(dev.last_state_changed_at).getTime() 
+            : Date.now();
 
-historyField.addEventListener("change", () => {
-  loadActionHistory({
-    search: historySearch.value,
-    field: historyField.value,
-  });
-});
+        function tick() {
+            const now = Date.now();
+            const extra = Math.floor((now - lastChanged) / 1000); 
+            updateUsage(key, base + extra);
 
-// ========== Page Size ==========
-historyPageSize.addEventListener("change", () => {
-  if (typeof sensorPager !== "undefined" && sensorPager?.setRowsPerPage) {
-    sensorPager.setRowsPerPage(Number(historyPageSize.value || 10));
-  }
-});
+            usageTimers[key] = requestAnimationFrame(tick);
+        }
 
-// ========== Sort khi click header ==========
-historyTable.querySelectorAll("thead th").forEach(th => {
-  th.addEventListener("click", () => {
-    const field = th.dataset.sort || "time";
-    let newOrder;
+        tick();
+        }
 
-    if (th.classList.contains("asc")) {
-      resetHistorySort(th);
-      th.classList.remove("asc");
-      th.classList.add("desc");
-      newOrder = "desc";
-    } else if (th.classList.contains("desc")) {
-      resetHistorySort(th);
-      th.classList.remove("desc");
-      th.classList.add("asc");
-      newOrder = "asc";
+        function stopUsageTimer(key) {
+        if (usageTimers[key]) {
+            cancelAnimationFrame(usageTimers[key]);
+            usageTimers[key] = null;
+        }
+    }
+
+    
+    function getToggleInput(key){
+        // tìm checkbox theo onchange chứa toggleDevice('<key>'
+        return document.querySelector(`input[type="checkbox"][onchange*="toggleDevice('${key}'"]`);
+    }
+
+    /** =============================
+     *  Toggle thiết bị từ Dashboard
+     *  ============================= */
+    async function toggleDevice(key, checkboxEl){
+    const meta = DEVICE_MAP[key]; if(!meta) return;
+    const status = checkboxEl.checked ? 'ON' : 'OFF';
+    try{
+        await fetch('/api/devices/toggle', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ id: meta.id, status })
+        });
+        setLoading(key, true);
+        // Tạm set UI (ACK về sẽ đồng bộ lại)
+        //setDeviceStatus(key, status);
+        // setDeviceIcon(key, status);
+    }catch(e){
+        console.error('toggle failed', e);
+        checkboxEl.checked = !checkboxEl.checked; // rollback
+        alert('Toggle thất bại!');
+    }
+    }
+
+    (async function bootstrap(){
+    // 3) Lấy danh sách thiết bị để đồng bộ trạng thái 3 công tắc
+    try{
+        const r3 = await fetch('/api/devices');
+        const devices = await r3.json();
+        const byId = {}; devices.forEach(d=> byId[d.id]=d);
+        Object.entries(DEVICE_MAP).forEach(([key,{id}])=>{
+            const dev = byId[id]; if(!dev) return;
+            setDeviceStatus(key, dev.status);
+            setDeviceIcon(key, dev.status);
+            updateUsage(key, dev.usage_seconds_today);
+            const input = getToggleInput(key);
+            if(input) input.checked = dev.status==='ON';
+            if (dev.status === "ON") {
+                startUsageTimer(key, dev);
+            } else {
+                stopUsageTimer(key);
+                updateUsage(key, dev.usage_seconds_today || 0);
+            }
+        });
+    }catch(e){ console.warn('load devices failed', e); }
+    })();
+
+    /** =============================
+     *  Lắng nghe ACK từ server
+     *  ============================= */
+    socket.on("devices:update", (dev) => {
+    // tìm key trong DEVICE_MAP theo id
+    const entry = Object.entries(DEVICE_MAP).find(([_, meta]) => meta.id === dev.id);
+    if (!entry) return;
+    const [key] = entry;
+
+    // cập nhật UI chính xác theo ack
+    setDeviceStatus(key, dev.status);
+    setDeviceIcon(key, dev.status);
+    updateUsage(key, dev.usage_seconds_today);
+    setLoading(key, false);
+    loadActionHistory(); // reload lịch sử
+
+    const input = getToggleInput(key);
+    if (input) input.checked = dev.status === "ON";
+
+    if (dev.status === "ON") {
+        startUsageTimer(key, dev);
     } else {
-      resetHistorySort(th);
-      th.classList.remove("inactive");
-      th.classList.add("asc");
-      newOrder = "asc";
+        stopUsageTimer(key);
+        updateUsage(key, dev.usage_seconds_today || 0); // dùng giá trị DB khi OFF
     }
 
-    loadActionHistory({
-      search: historySearch.value,
-      field: historyField.value,
-      sort: field,
-      order: newOrder,
+
+    console.log("ACK cập nhật thiết bị:", dev);
     });
-  });
-});
 
-function resetHistorySort(activeTh) {
-  historyTable.querySelectorAll("thead th").forEach(col => {
-    if (col !== activeTh) {
-      col.classList.remove("asc", "desc");
-      col.classList.add("inactive");
+    /** ================================
+    *  ACTION HISTORY SCRIPT
+    *  ================================ */
+
+    // DOM refs
+    const historyTable     = document.querySelector(".data-table table"); // lấy table trong div data-table
+    const historyTbody     = document.getElementById("DataTable"); // tbody
+    const historySearch    = document.getElementById("searchInput");
+    const historyField     = document.getElementById("dataTypeSelect");
+    const historySearchBtn = document.querySelector(".search-icon"); // dùng icon search
+    const historyPageSize  = document.getElementById("pageSizeSelect");
+
+    // Render bảng
+    function renderHistoryTable(rows = []) {
+    historyTbody.innerHTML = rows.map(r => {
+        const dt = new Date(r.time || Date.now());
+        const deviceName = r.deviceName || r.device || `Device #${r.deviceId}`;
+        const color = r.status === "ON" ? "#10b981" : "#ef4444";
+        return `
+        <tr>
+            <td>${dt.toLocaleString()}</td>
+            <td>${deviceName}</td>
+            <td><span style="color:${color};font-weight:600">${r.status}</span></td>
+            <td>${r.actionBy || "System"}</td>
+        </tr>
+        `;
+    }).join("");
+
+    if (typeof sensorPager !== "undefined" && sensorPager?.refresh) {
+        sensorPager.refresh();
     }
-  });
-}
+    }
 
-// ========== Initial load ==========
-loadActionHistory();
+    // Load dữ liệu từ API
+    async function loadActionHistory({
+        search = "",
+        field = "all",
+        sort = "time",
+        order = "desc",
+        page = 1,
+        limit = 50,
+    } = {}) {
+    try {
+        const url = `/api/devices/action_history?search=${encodeURIComponent(
+        search
+        )}&field=${field}&sort=${sort}&order=${order}&page=${page}&limit=${limit}`;
+        const res = await fetch(url);
+        const rows = await res.json();
+        renderHistoryTable(rows);
+    } catch (err) {
+        console.error("Load action history failed", err);
+    }
+    }
+
+    // ========== Search / Filter ==========
+    historySearch.addEventListener("keypress", e => {
+    if (e.key === "Enter") {
+        loadActionHistory({
+        search: historySearch.value,
+        field: historyField.value,
+        });
+    }
+    });
+
+    historySearchBtn.addEventListener("click", () => {
+    loadActionHistory({
+        search: historySearch.value,
+        field: historyField.value,
+    });
+    });
+
+    historyField.addEventListener("change", () => {
+    loadActionHistory({
+        search: historySearch.value,
+        field: historyField.value,
+    });
+    });
+
+    // ========== Page Size ==========
+    historyPageSize.addEventListener("change", () => {
+    if (typeof sensorPager !== "undefined" && sensorPager?.setRowsPerPage) {
+        sensorPager.setRowsPerPage(Number(historyPageSize.value || 10));
+    }
+    });
+
+    // ========== Sort khi click header ==========
+    historyTable.querySelectorAll("thead th").forEach(th => {
+    th.addEventListener("click", () => {
+        const field = th.dataset.sort || "time";
+        let newOrder;
+
+        if (th.classList.contains("asc")) {
+            resetHistorySort(th);
+            th.classList.remove("asc");
+            th.classList.add("desc");
+            newOrder = "desc";
+        } else if (th.classList.contains("desc")) {
+            resetHistorySort(th);
+            th.classList.remove("desc");
+            th.classList.add("asc");
+            newOrder = "asc";
+        } else {
+            resetHistorySort(th);
+            th.classList.remove("inactive");
+            th.classList.add("asc");
+            newOrder = "asc";
+        }
+
+        loadActionHistory({
+            search: historySearch.value,
+            field: historyField.value,
+            sort: field,
+            order: newOrder,
+        });
+    });
+    });
+
+    function resetHistorySort(activeTh) {
+    historyTable.querySelectorAll("thead th").forEach(col => {
+        if (col !== activeTh) {
+        col.classList.remove("asc", "desc");
+        col.classList.add("inactive");
+        }
+    });
+    }
+
+    // ========== Initial load ==========
+    loadActionHistory();
+
+    
 </script>
 
 

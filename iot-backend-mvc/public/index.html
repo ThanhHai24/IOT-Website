@@ -75,7 +75,7 @@
 
             <!-- Device Controls -->
             <div class="dashboard-grid">
-                <div class="card device-card">
+                <div class="card device-card" id="card-light">
                     <div class="device-card-name">
                         <div class="device-icon">
                             <i id="icon-light" class="bi bi-lightbulb-fill"></i>
@@ -90,7 +90,7 @@
                         <span class="slider"></span>
                     </label>
                 </div>
-                <div class="card device-card">
+                <div class="card device-card" id="card-fan">
                     <div class="device-card-name">
                         <div class="device-icon">
                             <i id="icon-fan" class="fa-solid fa-fan"></i>
@@ -105,7 +105,7 @@
                         <span class="slider"></span>
                     </label>
                 </div>
-                <div class="card device-card">
+                <div class="card device-card" id="card-ac">
                     <div class="device-card-name">
                         <div class="device-icon">
                             <i id="icon-ac" class="bi bi-snow2">   
@@ -183,16 +183,45 @@
         // Helpers
         function fmtUsage(sec){
         const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;
-        if(h>0) return `${h}h ${m}m`;
-        if(m>0) return `${m}m ${s}s`;
-        return `${s}s`;
+            if(h>0) return `${h}h ${m}m`;
+            if(m>0) return `${m}m ${s}s`;
+            return `${s}s`;
         }
         function setDeviceStatus(key, status){
-        const span = document.getElementById(`status-${key}`);
-        if(!span) return;
-        span.innerText = status;
-        span.classList.remove('on','off');
-        span.classList.add(status==='ON'?'on':'off');
+            const span = document.getElementById(`status-${key}`);
+            if(!span) return;
+            span.innerText = status;
+            span.classList.remove('on','off');
+            span.classList.add(status==='ON'?'on':'off');
+        }
+        function setDeviceIcon(key, status) {
+            const icon = document.getElementById(`icon-${key}`);
+            if (!icon) return;
+
+            const onClass = `${key}-on`;
+            if (status === "ON") {
+                icon.classList.add(onClass);
+                if (key === "ac" && !icon.querySelector(".snow")) {
+                icon.insertAdjacentHTML(
+                    "beforeend",
+                    '<span class="snow">❄</span><span class="snow delay">❄</span>'
+                );
+                }
+            } else {
+                icon.classList.remove(onClass);
+                if (key === "ac") {
+                icon.querySelectorAll(".snow").forEach((el) => el.remove());
+                }
+            }
+        }
+        function setLoading(key, isLoading) {
+            const card = document.getElementById(`card-${key}`);
+            if (!card) return;
+            if (isLoading) {
+                card.classList.add("loading");
+            } else {
+                card.classList.remove("loading");
+            }
         }
         function getToggleInput(key){
         // tìm checkbox theo onchange chứa toggleDevice('<key>'
@@ -281,6 +310,7 @@
             Object.entries(DEVICE_MAP).forEach(([key,{id}])=>{
             const dev = byId[id]; if(!dev) return;
             setDeviceStatus(key, dev.status);
+            setDeviceIcon(key, dev.status);
             const input = getToggleInput(key);
             if(input) input.checked = dev.status==='ON';
             });
@@ -295,14 +325,25 @@
         addPoint(row.measured_at || Date.now(), row.temp, row.humid, row.light);
         });
 
-        socket.on('devices:update', (payload)=>{
-        // payload: { id, name, status, usage_seconds_today, usage_date }
-        const entry = Object.entries(DEVICE_MAP).find(([_,v])=> v.id===payload.id);
-        if(!entry) return;
+        /** =============================
+         *  Lắng nghe ACK từ server
+         *  ============================= */
+        socket.on("devices:update", (dev) => {
+        // tìm key trong DEVICE_MAP theo id
+        const entry = Object.entries(DEVICE_MAP).find(([_, meta]) => meta.id === dev.id);
+        if (!entry) return;
         const [key] = entry;
-        setDeviceStatus(key, payload.status);
+
+        // cập nhật UI chính xác theo ack
+        setDeviceStatus(key, dev.status);
+        setDeviceIcon(key, dev.status);
+        setLoading(key, false);
+
         const input = getToggleInput(key);
-        if(input) input.checked = payload.status==='ON';
+        if (input) input.checked = dev.status === "ON";
+
+
+        console.log("ACK cập nhật thiết bị:", dev);
         });
 
         /** =============================
@@ -318,27 +359,9 @@
             body: JSON.stringify({ id: meta.id, status })
             });
             // Tạm set UI (ACK về sẽ đồng bộ lại)
-            setDeviceStatus(key, status);
-
-            const icon = document.getElementById(`icon-${key}`);
-            if (icon) {
-                const onClass = `${key}-on`;
-                if (status === 'ON') {
-                    icon.classList.add(onClass);
-                    if (key === 'ac') {
-                        // thêm 2 bông tuyết nếu chưa có
-                        if (!icon.querySelector('.snow')) {
-                            icon.insertAdjacentHTML('beforeend', '<span class="snow">❄</span><span class="snow delay">❄</span>');
-                        }
-                    }
-                } else {
-                    icon.classList.remove(onClass);
-                    if (key === 'ac') {
-                        // xoá các bông tuyết khi OFF
-                        icon.querySelectorAll('.snow').forEach(el => el.remove());
-                    }
-                }
-            }
+            //setDeviceStatus(key, status);
+            // setDeviceIcon(key, status);
+            setLoading(key, true);
         }catch(e){
             console.error('toggle failed', e);
             checkboxEl.checked = !checkboxEl.checked; // rollback

@@ -39,7 +39,9 @@ export function initMqtt(io) {
     try {
       const payload = JSON.parse(message.toString());
 
-      // 1) Lưu sensor data
+      /** =============================
+       *  1) Lưu sensor data
+       *  ============================= */
       if (topic === process.env.MQTT_TOPIC_SENSORS) {
         const row = await SensorData.create({
           temp:  payload.temp  ?? payload.temperature,
@@ -50,7 +52,9 @@ export function initMqtt(io) {
         io.emit('sensors:new', row);
       }
 
-      // 2) Nhận ACK trạng thái thiết bị để cập nhật usage time
+      /** =============================
+       *  2) Nhận ACK trạng thái thiết bị
+       *  ============================= */
       if (topic === process.env.MQTT_TOPIC_ACK) {
         const now = new Date();
         const dev = await findDeviceByIdentity(payload);
@@ -74,19 +78,26 @@ export function initMqtt(io) {
           last_state_changed_at: now
         });
 
+        // Xác định actionBy: nếu payload có thì dùng, không thì mặc định System
+        const actionBy = payload.actionBy || 'System';
+
         // Ghi lịch sử
         await ActionHistory.create({
           deviceId: dev.id,
           status: payload.status,
-          time: now
+          time: now,
+          actionBy
         });
 
+        // Emit realtime ra client
         io.emit('devices:update', {
           id: dev.id,
           name: dev.name,
           status: dev.status,
           usage_seconds_today: dev.usage_seconds_today,
-          usage_date: dev.usage_date
+          usage_date: dev.usage_date,
+          last_state_changed_at: dev.last_state_changed_at,
+          actionBy
         });
       }
     } catch (e) {
@@ -97,13 +108,17 @@ export function initMqtt(io) {
   client.on('error', (err) => console.error('[MQTT] error:', err.message));
 }
 
-/** Publish lệnh điều khiển thiết bị: { id|name, status } */
-export async function publishDeviceCommand({ id, name, status }) {
+/** =============================
+ *  Publish lệnh điều khiển thiết bị
+ *  { id|name, status, actionBy }
+ *  ============================= */
+export async function publishDeviceCommand({ id, name, status, actionBy }) {
   const topic = process.env.MQTT_TOPIC_DEVICES;
   const msgObj = {};
   if (id != null) msgObj.id = id;
   if (name) msgObj.name = name;
   msgObj.status = status; // 'ON' | 'OFF'
+  msgObj.actionBy = actionBy || 'System';
   const msg = JSON.stringify(msgObj);
 
   client.publish(topic, msg, { qos: 0, retain: false });

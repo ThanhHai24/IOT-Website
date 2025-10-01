@@ -23,12 +23,22 @@ export default {
 
     // kiểm tra tồn tại thiết bị trước khi publish
     let exists = null;
-    if (value.id != null) exists = await Device.findByPk(value.id);
-    else exists = await Device.findOne({ where: { name: value.name } });
+    if (value.id != null) {
+      exists = await Device.findByPk(value.id);
+    } else {
+      exists = await Device.findOne({ where: { name: value.name } });
+    }
 
-    if (!exists) return res.status(404).json({ error: 'Device not found' });
+    if (!exists) {
+      return res.status(404).json({ error: 'Device not found' });
+    }
 
-    const info = await publishDeviceCommand(value);
+    // publish command kèm actionBy = 'User'
+    const info = await publishDeviceCommand({
+      ...value,
+      actionBy: 'User'
+    });
+
     res.json({ ok: true, info });
   },
 
@@ -43,7 +53,7 @@ export default {
         limit = 50,
       } = req.query;
 
-      const validSortFields = ["time", "status", "deviceName"];
+      const validSortFields = ["time", "status", "deviceName", "actionBy"];
       const validOrders = ["ASC", "DESC"];
       const sortField = validSortFields.includes(sort) ? sort : "time";
       const sortOrder = validOrders.includes(order.toUpperCase())
@@ -70,6 +80,12 @@ export default {
               [Op.like]: `%${search}%`,
             }),
           ];
+        } else if (field === "actionBy") {
+          where[Op.and] = [
+            SequelizeWhere(literal("CAST(`ActionHistory`.`actionBy` AS CHAR)"), {
+              [Op.like]: `%${search}%`,
+            }),
+          ];
         } else if (field === "time") {
           where[Op.and] = [timeCondition];
         } else if (field === "all") {
@@ -78,6 +94,9 @@ export default {
               [Op.like]: `%${search}%`,
             }),
             SequelizeWhere(literal("CAST(`Device`.`name` AS CHAR)"), {
+              [Op.like]: `%${search}%`,
+            }),
+            SequelizeWhere(literal("CAST(`ActionHistory`.`actionBy` AS CHAR)"), {
               [Op.like]: `%${search}%`,
             }),
             timeCondition,
@@ -90,7 +109,9 @@ export default {
         include: [{ model: Device, attributes: ["name"] }],
         order: [
           [
-            sortField === "deviceName" ? col("Device.name") : col(`ActionHistory.${sortField}`),
+            sortField === "deviceName"
+              ? col("Device.name")
+              : col(`ActionHistory.${sortField}`),
             sortOrder,
           ],
         ],
@@ -98,12 +119,13 @@ export default {
         limit: Number(limit),
       });
 
-      // format JSON trả về: thêm deviceName
+      // format JSON trả về: thêm deviceName + actionBy
       const result = rows.map(r => ({
         id: r.id,
         deviceId: r.deviceId,
         deviceName: r.Device?.name || `Device #${r.deviceId}`,
         status: r.status,
+        actionBy: r.actionBy, // 👈 thêm actionBy
         time: r.time,
       }));
 
@@ -113,4 +135,5 @@ export default {
       res.status(500).json({ error: err.message });
     }
   }
+
 };
