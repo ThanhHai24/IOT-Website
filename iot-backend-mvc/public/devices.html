@@ -181,7 +181,7 @@
             </div>
         </div>
     </div>
-        <!-- Profile Modal -->
+    <!-- Profile Modal -->
     <div id="profileModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -192,20 +192,34 @@
                 <div class="profile-modal-avatar"><img src="assets/images/Anhthe.jpg" alt=""></div>
                 <div class="profile-info">
                     <h2>Nông Thanh Hải</h2>
-                    <p><strong>Mã Sinh Viên:</strong> B22DCCN264</p>
-                    <p><strong>CCCD:</strong> 019204000327</p>
-                    <p><strong>Email:</strong> nthanhhai594@gmail.com</p>
-                    <p><strong>Số điện thoại:</strong> 0969174272</p>
+                    <div class="profile-info-grid">
+                        <div class="personal-information">
+                            <h3 style="text-align: center;">Thông tin cá nhân</h3>
+                            <p><strong>Ngày Sinh:</strong> 05/09/2004</p>
+                            <p><strong>Địa Chỉ:</strong> Thái Nguyên, Việt Nam</p>
+                            <p><strong>Số Điện Thoại:</strong> 0969175272</p>
+                            <p><strong>Email:</strong> nthanhhai594@gmail.com</p>
+                        </div>
+                        <div class="school-infomation">
+                            <h3 style="text-align: center;">Thông tin học tập</h3>
+                            <p><strong>Mã Sinh Viên:</strong> B22DCCN264</p>
+                            <p><strong>Lớp:</strong> HTTT06</p>
+                            <p><strong>Trường:</strong> Học Viện Công Nghệ Bưu Chính Viễn Thông</p>
+                            <p><strong>Chuyên Ngành:</strong> Công nghệ thông tin</p>
+                            
+                        </div>
+                    </div>
+                    
                 </div>
                 <div class="profile-links">
                     <a href="#"><img src="assets/images/github.jpg" onclick="alert('Updating')" alt=""></a>
                     <a href="#"><img src="assets/images/PDF.png" onclick="alert('Updating')" alt=""></a>
-                    <a href="#"><img src="assets/images/apidoc.png" onclick="alert('Updating')" alt=""></a>
+                    <a href="#"><img src="assets/images/Swagger.png" onclick="alert('Updating')" alt=""></a>
                 </div>
             </div>
         </div>
     </div>
-    <scrip src="assets/js/profilemodal.js"></script>
+    <script src="assets/js/profilemodal.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script type="module">
         import { renderPagination } from "./assets/js/pagination-utils.js";
@@ -461,7 +475,7 @@
     setDeviceIcon(key, dev.status);
     updateUsage(key, dev.usage_seconds_today);
     setLoading(key, false);
-    loadActionHistory(); // reload lịch sử
+    // loadActionHistory(); // reload lịch sử
 
     const input = getToggleInput(key);
     if (input) input.checked = dev.status === "ON";
