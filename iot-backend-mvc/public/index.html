@@ -297,9 +297,11 @@
         // 2) Lịch sử để vẽ chart (limit 200 gần nhất)
         try{
             const r2 = await fetch('/api/sensors?limit=200');
-            let history = await r2.json();
+            const json = await r2.json();
+            let history = Array.isArray(json) ? json : json.data || [];
             history.sort((a,b)=> new Date(a.measured_at) - new Date(b.measured_at));
             history.forEach(row=> addPoint(row.measured_at, row.temp, row.humid, row.light));
+
         }catch(e){ console.warn('load history failed', e); }
 
         // 3) Lấy danh sách thiết bị để đồng bộ trạng thái 3 công tắc

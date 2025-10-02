@@ -253,32 +253,38 @@
 
         /* Device Controls */
         /* Khi card loading */
-            .card.loading {
+        .card.loading {
             position: relative;
-            pointer-events: none; /* Không cho bấm */
+            pointer-events: none;
+            overflow: hidden;
         }
 
+        /* lớp tối mờ */
         .card.loading::before {
             content: "";
             position: absolute;
             inset: 0;
-            background: rgba(0,0,0,0.5); /* lớp tối mờ */
-            border-radius: 1rem; /* bo góc theo card */
+            background: rgba(0,0,0,0.5);
+            border-radius: 12px;
             z-index: 5;
         }
 
+        /* spinner ở giữa */
         .card.loading::after {
             content: "";
             position: absolute;
-            top: 50%; left: 50%;
-            width: 32px; height: 32px;
+            top: 50%;
+            left: 50%;
+            width: 32px;
+            height: 32px;
             border: 3px solid rgba(255,255,255,0.5);
-            border-top-color: #fff; /* màu trắng sáng */
+            border-top-color: #fff;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%); 
             z-index: 6;
         }
+
         .device-card {
             display: flex;
             justify-content: space-between;

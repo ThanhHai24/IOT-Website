@@ -75,6 +75,9 @@ export default {
         limit = 50,
       } = req.query;
 
+      page = Number(page) || 1;
+      limit = Number(limit) || 50;
+
       const validSortFields = ["measured_at", "temp", "humid", "light"];
       const validOrders = ["ASC", "DESC"];
       const sortField = validSortFields.includes(sort) ? sort : "measured_at";
@@ -84,7 +87,6 @@ export default {
 
       const where = {};
       if (search) {
-        // Search trực tiếp theo format gốc "YYYY-MM-DD HH:mm:ss"
         const timeCondition = SequelizeWhere(
           fn("DATE_FORMAT", col("measured_at"), "%Y-%m-%d %H:%i:%s"),
           { [Op.like]: `%${search}%` }
@@ -126,6 +128,10 @@ export default {
         }
       }
 
+      // đếm tổng số record
+      const total = await SensorData.count({ where });
+
+      // lấy dữ liệu
       const rows = await SensorData.findAll({
         where,
         order: [[sortField, sortOrder]],
@@ -133,7 +139,15 @@ export default {
         limit: Number(limit),
       });
 
-      res.json(rows);
+      res.json({
+        data: rows,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      });
     } catch (err) {
       console.error("Error in getSensors:", err);
       res.status(500).json({ error: err.message });

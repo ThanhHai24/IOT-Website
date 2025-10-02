@@ -124,10 +124,10 @@
                     <div class="select-bar">
                         <select id="dataTypeSelect">
                             <option value="all">All</option>
-                            <option value="time">Time</option>
                             <option value="device">Device</option>
                             <option value="status">Status</option>
-                            <option value="actionbt">Action By</option>
+                            <option value="actionby">Action By</option>
+                            <option value="time">Time</option>
                         </select>
                     </div>
                 </div>
@@ -149,14 +149,14 @@
 
             <!-- History Table -->
             <div class="data-table" style="margin-top: 30px;">
-                <div class="table-header">Device Aciton History</div>
+                <div class="table-header">Device Action History</div>
                 <table>
                     <thead>
                         <tr>
-                            <th class="inactive" data-sort="time">Time</th>
                             <th class="inactive" data-sort="device">Device</th>
                             <th class="inactive" data-sort="status">Status</th>
                             <th class="inactive" data-sort="actionby">Action By</th>
+                            <th class="inactive" data-sort="time">Time</th>
                         </tr>
                     </thead>
                     <tbody id="DataTable">
@@ -205,11 +205,104 @@
             </div>
         </div>
     </div>
-    <script src="assets/js/profilemodal.js"></script>
-
-    <script src="assets/js/paginition.js">
-    </script>
+    <scrip src="assets/js/profilemodal.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <script type="module">
+        import { renderPagination } from "./assets/js/pagination-utils.js";
+
+        let historyState = { search:"", field:"all", sort:"time", order:"desc", page:1, limit:10 };
+
+        function renderHistoryTable(rows = []) {
+            const tbody = document.getElementById("DataTable");
+            tbody.innerHTML = rows.map(r => {
+                const color = r.status === "ON" ? "#10b981" : "#ef4444"; // xanh / đỏ
+                return `
+                <tr>
+                    <td>${r.deviceName || r.device || `Device #${r.deviceId}`}</td>
+                    <td><span style="color:${color};font-weight:600">${r.status}</span></td>
+                    <td>${r.actionBy || "System"}</td>
+                    <td>${r.time}</td>
+                </tr>
+                `;
+            }).join("");
+        }
+
+        async function loadActionHistory() {
+        const { search, field, sort, order, page, limit } = historyState;
+        try {
+            const url = `/api/devices/action_history?search=${encodeURIComponent(search)}&field=${field}&sort=${sort}&order=${order}&page=${page}&limit=${limit}`;
+            const res = await fetch(url);
+            const json = await res.json();
+
+            renderHistoryTable(json.data);
+
+            // dùng chung renderPagination
+            renderPagination({
+            containerId: "pagination",
+            prevId: "prevPage",
+            nextId: "nextPage",
+            pageInfoId: "pageInfo",
+            pagination: json.pagination,
+            onPageChange: (newPage) => {
+                historyState.page = newPage;
+                loadActionHistory();
+            }
+            });
+        } catch (err) {
+            console.error("Load action history failed", err);
+        }
+        }
+
+        // Sự kiện search / filter / page size
+        document.getElementById("searchInput").addEventListener("keypress", e => {
+        if (e.key === "Enter") {
+            historyState.search = e.target.value;
+            historyState.page = 1;
+            loadActionHistory();
+        }
+        });
+        document.querySelector(".search-icon").addEventListener("click", () => {
+        historyState.search = document.getElementById("searchInput").value;
+        historyState.page = 1;
+        loadActionHistory();
+        });
+        document.getElementById("dataTypeSelect").addEventListener("change", e => {
+        historyState.field = e.target.value;
+        historyState.page = 1;
+        loadActionHistory();
+        });
+        document.getElementById("pageSizeSelect").addEventListener("change", e => {
+        historyState.limit = Number(e.target.value || 10);
+        historyState.page = 1;
+        loadActionHistory();
+        });
+
+        // Sort khi click header
+        document.querySelectorAll(".data-table thead th").forEach(th => {
+        th.addEventListener("click", () => {
+            const field = th.dataset.sort || "time";
+            // reset class
+            document.querySelectorAll(".data-table thead th").forEach(col => {
+            if (col !== th) col.classList.remove("asc", "desc");
+            });
+            // toggle asc/desc
+            if (th.classList.contains("asc")) {
+            th.classList.remove("asc"); th.classList.add("desc");
+            historyState.order = "desc";
+            } else {
+            th.classList.remove("desc"); th.classList.add("asc");
+            historyState.order = "asc";
+            }
+            historyState.sort = field;
+            historyState.page = 1;
+            loadActionHistory();
+        });
+        });
+
+        // Initial load
+        loadActionHistory();
+    </script>
+
     <script>
     const socket = io();
 
@@ -384,137 +477,8 @@
     console.log("ACK cập nhật thiết bị:", dev);
     });
 
-    /** ================================
-    *  ACTION HISTORY SCRIPT
-    *  ================================ */
-
-    // DOM refs
-    const historyTable     = document.querySelector(".data-table table"); // lấy table trong div data-table
-    const historyTbody     = document.getElementById("DataTable"); // tbody
-    const historySearch    = document.getElementById("searchInput");
-    const historyField     = document.getElementById("dataTypeSelect");
-    const historySearchBtn = document.querySelector(".search-icon"); // dùng icon search
-    const historyPageSize  = document.getElementById("pageSizeSelect");
-
-    // Render bảng
-    function renderHistoryTable(rows = []) {
-    historyTbody.innerHTML = rows.map(r => {
-        const dt = new Date(r.time || Date.now());
-        const deviceName = r.deviceName || r.device || `Device #${r.deviceId}`;
-        const color = r.status === "ON" ? "#10b981" : "#ef4444";
-        return `
-        <tr>
-            <td>${dt.toLocaleString()}</td>
-            <td>${deviceName}</td>
-            <td><span style="color:${color};font-weight:600">${r.status}</span></td>
-            <td>${r.actionBy || "System"}</td>
-        </tr>
-        `;
-    }).join("");
-
-    if (typeof sensorPager !== "undefined" && sensorPager?.refresh) {
-        sensorPager.refresh();
-    }
-    }
-
-    // Load dữ liệu từ API
-    async function loadActionHistory({
-        search = "",
-        field = "all",
-        sort = "time",
-        order = "desc",
-        page = 1,
-        limit = 50,
-    } = {}) {
-    try {
-        const url = `/api/devices/action_history?search=${encodeURIComponent(
-        search
-        )}&field=${field}&sort=${sort}&order=${order}&page=${page}&limit=${limit}`;
-        const res = await fetch(url);
-        const rows = await res.json();
-        renderHistoryTable(rows);
-    } catch (err) {
-        console.error("Load action history failed", err);
-    }
-    }
-
-    // ========== Search / Filter ==========
-    historySearch.addEventListener("keypress", e => {
-    if (e.key === "Enter") {
-        loadActionHistory({
-        search: historySearch.value,
-        field: historyField.value,
-        });
-    }
-    });
-
-    historySearchBtn.addEventListener("click", () => {
-    loadActionHistory({
-        search: historySearch.value,
-        field: historyField.value,
-    });
-    });
-
-    historyField.addEventListener("change", () => {
-    loadActionHistory({
-        search: historySearch.value,
-        field: historyField.value,
-    });
-    });
-
-    // ========== Page Size ==========
-    historyPageSize.addEventListener("change", () => {
-    if (typeof sensorPager !== "undefined" && sensorPager?.setRowsPerPage) {
-        sensorPager.setRowsPerPage(Number(historyPageSize.value || 10));
-    }
-    });
-
-    // ========== Sort khi click header ==========
-    historyTable.querySelectorAll("thead th").forEach(th => {
-    th.addEventListener("click", () => {
-        const field = th.dataset.sort || "time";
-        let newOrder;
-
-        if (th.classList.contains("asc")) {
-            resetHistorySort(th);
-            th.classList.remove("asc");
-            th.classList.add("desc");
-            newOrder = "desc";
-        } else if (th.classList.contains("desc")) {
-            resetHistorySort(th);
-            th.classList.remove("desc");
-            th.classList.add("asc");
-            newOrder = "asc";
-        } else {
-            resetHistorySort(th);
-            th.classList.remove("inactive");
-            th.classList.add("asc");
-            newOrder = "asc";
-        }
-
-        loadActionHistory({
-            search: historySearch.value,
-            field: historyField.value,
-            sort: field,
-            order: newOrder,
-        });
-    });
-    });
-
-    function resetHistorySort(activeTh) {
-    historyTable.querySelectorAll("thead th").forEach(col => {
-        if (col !== activeTh) {
-        col.classList.remove("asc", "desc");
-        col.classList.add("inactive");
-        }
-    });
-    }
-
-    // ========== Initial load ==========
-    loadActionHistory();
-
-    
 </script>
+
 
 
 </body>

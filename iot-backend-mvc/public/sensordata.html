@@ -214,21 +214,22 @@
     <!-- Icon -->
     <script src="assets/js/sensoricon.js"></script>
     <script src="assets/js/profilemodal.js"></script>
-    <script src="assets/js/paginition.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io();
-        function numberOrNull(v) { const n = Number(v); return isNaN(n) ? null : n; }
+    <script type="module">
+        import { renderPagination } from "./assets/js/pagination-utils.js";
 
-        // ========= DOM refs =========
-        const searchInput    = document.getElementById('searchInput');
-        const dataTypeSelect = document.getElementById('dataTypeSelect');
-        const searchBtn      = document.getElementById("searchBtn");
-        const pageSizeSelect = document.getElementById('pageSizeSelect');
-        const tbody          = document.getElementById('DataTable');
+        // ========= State =========
+        let state = { 
+        search: "", 
+        field: "all", 
+        sort: "measured_at", 
+        order: "desc", 
+        page: 1, 
+        limit: 10 
+        };
 
-        // ========= Renderers =========
-        function renderTable(rows) {
+        // ========= Render table =========
+        function renderTable(rows = []) {
+        const tbody = document.getElementById("DataTable");
         tbody.innerHTML = rows.map(r => `
             <tr>
             <td>${Number(r.temp).toFixed(1)}</td>
@@ -236,308 +237,104 @@
             <td>${Number(r.light).toFixed(1)}</td>
             <td>${r.measured_at}</td>
             </tr>
-        `).join('');
-            if (typeof sensorPager !== "undefined" && sensorPager?.refresh) {
-                sensorPager.refresh();
-            }
+        `).join("");
         }
 
-        function renderCardsCurrent(rowLatest) {
-        if (!rowLatest) return;
-            const t = numberOrNull(rowLatest.temp);
-            const h = numberOrNull(rowLatest.humid);
-            const l = numberOrNull(rowLatest.light);
-            if (t!=null) document.getElementById('temp').innerText   = `${t.toFixed(1)}°C`;
-            if (h!=null) document.getElementById('humid').innerText  = `${h.toFixed(1)}%`;
-            if (l!=null) document.getElementById('light').innerText  = `${l.toFixed(1)} lux`;
-        }
+        // ========= Load API & render =========
+        async function loadTable() {
+        const { search, field, sort, order, page, limit } = state;
+        try {
+            const url = `/api/sensors?search=${encodeURIComponent(search)}&field=${field}&sort=${sort}&order=${order}&page=${page}&limit=${limit}`;
+            const res = await fetch(url);
+            const json = await res.json();
 
-        // ========= API Loader =========
-        async function loadTable({ search="", field="all", sort="measured_at", order="desc", page=1, limit=5000 } = {}) {
-            try {
-                const url = `/api/sensors?search=${encodeURIComponent(search)}&field=${field}&sort=${sort}&order=${order}&page=${page}&limit=${limit}`;
-                const res = await fetch(url);
-                const rows = await res.json();
+            renderTable(json.data);
 
-                // if (updateCurrent && rows.length > 0) {
-                //     renderCardsCurrent(rows[0]); // chỉ khi cần mới update current
-                // }
-                renderTable(rows);
-            } catch (err) {
-                console.error("Load sensors failed", err);
+            renderPagination({
+            containerId: "pagination",
+            prevId: "prevPage",
+            nextId: "nextPage",
+            pageInfoId: "pageInfo",
+            pagination: json.pagination,
+            onPageChange: (newPage) => {
+                state.page = newPage;
+                loadTable();
             }
-        }
-
-        // ========= UI Events =========
-        // Ấn Enter
-        searchInput.addEventListener("keypress", function(e) {
-            if (e.key === "Enter") {
-                loadTable({ 
-                search: searchInput.value, 
-                field: dataTypeSelect.value, 
-                });
-            }
-        });
-
-        // Click icon search
-        searchBtn.addEventListener("click", function() {
-            loadTable({ 
-                search: searchInput.value, 
-                field: dataTypeSelect.value,   
             });
-        });
-        // Chọn loại dữ liệu
-        dataTypeSelect.addEventListener("change", function() {
-            loadTable({ 
-                search: searchInput.value, 
-                field: dataTypeSelect.value,  
-            });
-        });
-        pageSizeSelect.addEventListener("change", () => {
-            if (typeof sensorPager !== "undefined" && sensorPager?.setRowsPerPage) {
-                sensorPager.setRowsPerPage(Number(pageSizeSelect.value || 10));
-            }
+        } catch (err) {
+            console.error("Load sensors failed", err);
+        }
+        }
+
+        // ========= Events =========
+        const searchInput    = document.getElementById("searchInput");
+        const searchBtn      = document.getElementById("searchBtn");
+        const dataTypeSelect = document.getElementById("dataTypeSelect");
+        const pageSizeSelect = document.getElementById("pageSizeSelect");
+
+        // Search (Enter)
+        searchInput.addEventListener("keypress", e => {
+        if (e.key === "Enter") {
+            state.search = e.target.value;
+            state.page = 1;
+            loadTable();
+        }
         });
 
-        // sort khi click header
-        // ========= Sort khi click header =========
+        // Search (Click)
+        searchBtn.addEventListener("click", () => {
+        state.search = searchInput.value;
+        state.page = 1;
+        loadTable();
+        });
+
+        // Filter field
+        dataTypeSelect.addEventListener("change", e => {
+        state.field = e.target.value;
+        state.page = 1;
+        loadTable();
+        });
+
+        // Page size
+        pageSizeSelect.addEventListener("change", e => {
+        state.limit = Number(e.target.value || 10);
+        state.page = 1;
+        loadTable();
+        });
+
+        // Sort khi click header
         document.querySelectorAll("thead th").forEach(th => {
-            th.addEventListener("click", () => {
+        th.addEventListener("click", () => {
             const field = th.dataset.sort || "measured_at";
-            let newOrder;
 
-            if (th.classList.contains("asc")) {
-                resetOthers(th);
-                th.classList.remove("asc");
-                th.classList.add("desc");
-                newOrder = "desc";
-            } else if (th.classList.contains("desc")) {
-                resetOthers(th);
-                th.classList.remove("desc");
-                th.classList.add("asc");
-                newOrder = "asc";
-            } else {
-                resetOthers(th);
-                th.classList.remove("inactive");
-                th.classList.add("asc");
-                newOrder = "asc";
-            }
-            loadTable({
-                search: searchInput.value,
-                field: dataTypeSelect.value,
-                sort: field,
-                order: newOrder
-            });
-            });
-        });
-
-        function resetOthers(activeTh) {
+            // reset các cột khác
             document.querySelectorAll("thead th").forEach(col => {
-            if (col !== activeTh) {
-                col.classList.remove("asc", "desc");
-                col.classList.add("inactive");
-            }
+            if (col !== th) col.classList.remove("asc", "desc");
             });
-        }
+
+            // toggle asc/desc
+            if (th.classList.contains("asc")) {
+            th.classList.remove("asc");
+            th.classList.add("desc");
+            state.order = "desc";
+            } else {
+            th.classList.remove("desc");
+            th.classList.add("asc");
+            state.order = "asc";
+            }
+
+            state.sort = field;
+            state.page = 1;
+            loadTable();
+        });
+        });
 
         // ========= Initial load =========
         loadTable();
     </script>
+
+    <script src="/socket.io/socket.io.js"></script>
     <script src="assets/js/sensor-realtime.js"></script>
-    <!-- <script>
-        const socket = io();
-
-        // ========= Utils =========
-        function fmtTime(d){
-            const dt = new Date(d);
-            const pad = n => n.toString().padStart(2,'0');
-            return `${pad(dt.getDate())}/${pad(dt.getMonth()+1)}/${dt.getFullYear()} ${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;
-        }
-        function isTodayLocal(dateLike){
-            const d = new Date(dateLike), now = new Date();
-            return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth() && d.getDate()===now.getDate();
-        }
-        function numberOrNull(v){ const n = Number(v); return isNaN(n) ? null : n; }
-
-        // ========= State =========
-        let allRows = [];       // toàn bộ DB (chỉ load 1 lần)
-        let filteredRows = [];  // sau search/filter (client)
-        let todayRows = [];     // dữ liệu hôm nay (chỉ để tính initial stats)
-
-        // High/Low hôm nay sẽ lưu ở đây để so sánh realtime
-        // const currentStats = {
-        //     temp:  { hi: null, lo: null },
-        //     humid: { hi: null, lo: null },
-        //     light: { hi: null, lo: null }
-        // };
-
-        const searchInput    = document.getElementById('searchInput');
-        const dataTypeSelect = document.getElementById('dataTypeSelect');
-        const pageSizeSelect = document.getElementById('pageSizeSelect');
-        const tbody          = document.getElementById('sensorDataTable');
-
-        // ========= Renderers =========
-        function renderCardsCurrent(rowLatest){
-            if (!rowLatest) return;
-            const t = numberOrNull(rowLatest.temp);
-            const h = numberOrNull(rowLatest.humid);
-            const l = numberOrNull(rowLatest.light);
-            if (t!=null) document.getElementById('temp').innerText   = `${t.toFixed(1)}°C`;
-            if (h!=null) document.getElementById('humid').innerText  = `${h.toFixed(1)}%`;
-            if (l!=null) document.getElementById('light').innerText  = `${l.toFixed(1)} lux`;
-        }
-
-        function recomputeTodayStats(){
-            // chỉ dùng để tính initial cards (high/low/avg) lúc load
-            todayRows = allRows.filter(r => isTodayLocal(r.measured_at || r.createdAt));
-            todayRows.sort((a,b)=> new Date(b.measured_at||b.createdAt) - new Date(a.measured_at||a.createdAt));
-
-            function stats(getter){
-            const vals = todayRows.map(getter).map(numberOrNull).filter(v => v!=null);
-            if(!vals.length) return {hi:null, lo:null, avg:null};
-            return {
-                hi: Math.max(...vals),
-                lo: Math.min(...vals),
-                avg: vals.reduce((a,b)=>a+b,0)/vals.length
-            };
-            }
-
-            const st = stats(r=>r.temp);
-            const sh = stats(r=>r.humid);
-            const sl = stats(r=>r.light);
-
-            // Gán vào DOM
-            document.getElementById('temp-high').innerText   = st.hi!=null ? `${st.hi.toFixed(1)}°C` : '--';
-            document.getElementById('temp-low').innerText    = st.lo!=null ? `${st.lo.toFixed(1)}°C` : '--';
-            document.getElementById('temp-avg').innerText    = st.avg!=null ? `${st.avg.toFixed(1)}°C` : '--';
-
-            document.getElementById('humid-high').innerText  = sh.hi!=null ? `${sh.hi.toFixed(0)}%` : '--';
-            document.getElementById('humid-low').innerText   = sh.lo!=null ? `${sh.lo.toFixed(0)}%` : '--';
-            document.getElementById('humid-avg').innerText   = sh.avg!=null ? `${sh.avg.toFixed(0)}%` : '--';
-
-            document.getElementById('light-high').innerText  = sl.hi!=null ? `${sl.hi.toFixed(0)} lux` : '--';
-            document.getElementById('light-low').innerText   = sl.lo!=null ? `${sl.lo.toFixed(0)} lux` : '--';
-            document.getElementById('light-avg').innerText   = sl.avg!=null ? `${sl.avg.toFixed(0)} lux` : '--';
-
-            // Lưu lại hi/lo để so sánh realtime (avg giữ nguyên — chỉ đổi khi refresh)
-            currentStats.temp.hi   = st.hi;   currentStats.temp.lo   = st.lo;
-            currentStats.humid.hi  = sh.hi;   currentStats.humid.lo  = sh.lo;
-            currentStats.light.hi  = sl.hi;   currentStats.light.lo  = sl.lo;
-        }
-
-        function renderTable(rows){
-            tbody.innerHTML = rows.map(r => `
-            <tr>
-                <td>${fmtTime(r.measured_at || r.createdAt || Date.now())}</td>
-                <td>${Number(r.temp).toFixed(1)}</td>
-                <td>${Number(r.humid).toFixed(1)}</td>
-                <td>${Number(r.light).toFixed(1)}</td>
-            </tr>
-            `).join('');
-            if (typeof sensorPager !== 'undefined' && sensorPager?.refresh) {
-            sensorPager.refresh();
-            }
-        }
-
-        // ========= Filtering & Search =========
-        // dataTypeSelect: all | temperature | humidity | light | time
-        function applyFilters(){
-            const q = (searchInput.value || '').trim().toLowerCase();
-            const kind = dataTypeSelect.value;
-
-            filteredRows = allRows.filter(r => {
-            const tStr   = Number(r.temp).toFixed(1);
-            const hStr   = Number(r.humid).toFixed(1);
-            const lStr   = Number(r.light).toFixed(1);
-            const timeStr= fmtTime(r.measured_at || r.createdAt).toLowerCase();
-
-            let haystack = '';
-            if (kind === 'temperature')      haystack = tStr;
-            else if (kind === 'humidity')    haystack = hStr;
-            else if (kind === 'light')       haystack = lStr;
-            else if (kind === 'time')        haystack = timeStr;
-            else                             haystack = `${tStr} ${hStr} ${lStr} ${timeStr}`;
-
-            return haystack.includes(q);
-            });
-
-            renderTable(filteredRows);
-        }
-
-        // ========= Load once (no table/stat live updates) =========
-        (async function loadAll(){
-            try{
-            const res = await fetch('/api/sensors?limit=5000');
-            let rows = await res.json();
-            rows.sort((a,b)=> new Date(b.measured_at||b.createdAt) - new Date(a.measured_at||a.createdAt));
-            allRows = rows;
-
-            renderCardsCurrent(allRows[0]);  // current = bản mới nhất
-            recomputeTodayStats();           // tính high/low/avg hôm nay (initial only)
-
-            filteredRows = [...allRows];     // bảng: toàn bộ dữ liệu
-            renderTable(filteredRows);
-            }catch(e){
-            console.warn('Load sensors failed', e);
-            }
-        })();
-
-        // ========= Wire UI events =========
-        searchInput.addEventListener('input', applyFilters);
-        dataTypeSelect.addEventListener('change', applyFilters);
-        pageSizeSelect.addEventListener('change', () => {
-            if (typeof sensorPager !== 'undefined' && sensorPager?.setRowsPerPage) {
-            sensorPager.setRowsPerPage(Number(pageSizeSelect.value || 10));
-            }
-        });
-
-        // ========= Realtime: chỉ cập nhật CURRENT và HIGH/LOW nếu là hôm nay =========
-        socket.on('sensors:new', (row)=>{
-            const isToday = isTodayLocal(row.measured_at || Date.now());
-
-            // Cập nhật current ngay (không động vào bảng/avg)
-            const t = numberOrNull(row.temp);
-            const h = numberOrNull(row.humid);
-            const l = numberOrNull(row.light);
-            if (t!=null) document.getElementById('temp').innerText  = `${t.toFixed(1)}°C`;
-            if (h!=null) document.getElementById('humid').innerText = `${h.toFixed(1)}%`;
-            if (l!=null) document.getElementById('light').innerText = `${l.toFixed(1)} lux`;
-
-            if (!isToday) return; // không xét high/low nếu bản ghi không thuộc hôm nay
-
-            // Nếu vượt ngưỡng thì cập nhật high/low + cache
-            if (t!=null){
-            if (currentStats.temp.hi==null || t > currentStats.temp.hi){
-                currentStats.temp.hi = t;
-                document.getElementById('temp-high').innerText = `${t.toFixed(1)}°C`;
-            }
-            if (currentStats.temp.lo==null || t < currentStats.temp.lo){
-                currentStats.temp.lo = t;
-                document.getElementById('temp-low').innerText = `${t.toFixed(1)}°C`;
-            }
-            }
-            if (h!=null){
-            if (currentStats.humid.hi==null || h > currentStats.humid.hi){
-                currentStats.humid.hi = h;
-                document.getElementById('humid-high').innerText = `${h.toFixed(0)}%`;
-            }
-            if (currentStats.humid.lo==null || h < currentStats.humid.lo){
-                currentStats.humid.lo = h;
-                document.getElementById('humid-low').innerText = `${h.toFixed(0)}%`;
-            }
-            }
-            if (l!=null){
-            if (currentStats.light.hi==null || l > currentStats.light.hi){
-                currentStats.light.hi = l;
-                document.getElementById('light-high').innerText = `${l.toFixed(0)} lux`;
-            }
-            if (currentStats.light.lo==null || l < currentStats.light.lo){
-                currentStats.light.lo = l;
-                document.getElementById('light-low').innerText = `${l.toFixed(0)} lux`;
-            }
-            }
-        });
-    </script> -->
 
 
 </body>

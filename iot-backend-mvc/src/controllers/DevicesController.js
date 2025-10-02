@@ -42,6 +42,7 @@ export default {
     res.json({ ok: true, info });
   },
 
+  // GET /api/devices/action_history
   getActionHistory: async (req, res) => {
     try {
       let {
@@ -50,8 +51,11 @@ export default {
         sort = "time",
         order = "desc",
         page = 1,
-        limit = 50,
+        limit = 10,
       } = req.query;
+
+      page = Number(page) || 1;
+      limit = Number(limit) || 10;
 
       const validSortFields = ["time", "status", "deviceName", "actionBy"];
       const validOrders = ["ASC", "DESC"];
@@ -104,6 +108,13 @@ export default {
         }
       }
 
+      // đếm tổng số record
+      const total = await ActionHistory.count({
+        where,
+        include: [{ model: Device, attributes: [] }],
+      });
+
+      // lấy dữ liệu trang hiện tại
       const rows = await ActionHistory.findAll({
         where,
         include: [{ model: Device, attributes: ["name"] }],
@@ -116,24 +127,31 @@ export default {
           ],
         ],
         offset: (page - 1) * limit,
-        limit: Number(limit),
+        limit,
       });
 
-      // format JSON trả về: thêm deviceName + actionBy
-      const result = rows.map(r => ({
+      // format JSON trả về
+      const data = rows.map(r => ({
         id: r.id,
         deviceId: r.deviceId,
         deviceName: r.Device?.name || `Device #${r.deviceId}`,
         status: r.status,
-        actionBy: r.actionBy, // 👈 thêm actionBy
+        actionBy: r.actionBy,
         time: r.time,
       }));
 
-      res.json(result);
+      res.json({
+        data,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        }
+      });
     } catch (err) {
       console.error("Lỗi khi lấy action history:", err);
       res.status(500).json({ error: err.message });
     }
   }
-
 };
