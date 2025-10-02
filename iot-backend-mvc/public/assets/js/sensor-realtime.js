@@ -6,7 +6,6 @@
 const socket = io();
 
 // ========= Config =========
-import { API_TOKEN } from "./config.js"; 
 
 // ========= Helpers =========
 function numberOrNull(v) {
