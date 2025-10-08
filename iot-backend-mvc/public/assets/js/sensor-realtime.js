@@ -42,7 +42,7 @@ async function initTodayStats() {
   try {
     const res = await fetch("/api/sensors/today", {
       headers: {
-        "Authorization": `Bearer ${API_TOKEN}`
+        "Authorization": 'Bearer 123456iottoken'
       }
     });
     const data = await res.json();

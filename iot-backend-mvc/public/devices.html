@@ -132,9 +132,9 @@
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <div class="refresh-button">
+                    <!-- <div class="refresh-button">
                         <button class="btn" onclick="location.reload()" aria-label="Làm mới trang"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
-                    </div>
+                    </div> -->
                     <div class="page-size">
                         <label for="pageSizeSelect">Rows per page:</label>
                         <select id="pageSizeSelect" onchange="changePageSize()">
@@ -171,7 +171,7 @@
             </div>
             <!-- Paginition -->
             <div class="table-footer">
-                <div class="page-info" id="pageInfo">Hiển thị 1–10 / 0</div>
+                <div class="page-info" id="pageInfo">Display 1–10 / 0</div>
 
                 <div class="pager">
                     <button class="btn" id="prevPage" aria-label="Trang trước">Prev</button>
@@ -212,9 +212,9 @@
                     
                 </div>
                 <div class="profile-links">
-                    <a href="#"><img src="assets/images/github.jpg" onclick="alert('Updating')" alt=""></a>
-                    <a href="#"><img src="assets/images/PDF.png" onclick="alert('Updating')" alt=""></a>
-                    <a href="#"><img src="assets/images/Swagger.png" onclick="alert('Updating')" alt=""></a>
+                    <a href="https://github.com/ThanhHai24/IOT-Website"><img src="assets/images/github.jpg" alt=""></a>
+                    <a href="https://docs.google.com/document/d/18-zN4Ud4orReVs2r7J5CfNzvaIeG-Kev/edit"><img src="assets/images/PDF.png" alt=""></a>
+                    <a href="http://localhost:3000/api-docs"><img src="assets/images/Swagger.png"  alt=""></a>
                 </div>
             </div>
         </div>
@@ -245,7 +245,13 @@
         const { search, field, sort, order, page, limit } = historyState;
         try {
             const url = `/api/devices/action_history?search=${encodeURIComponent(search)}&field=${field}&sort=${sort}&order=${order}&page=${page}&limit=${limit}`;
-            const res = await fetch(url);
+            const res = await fetch(url,
+                {
+                    headers:{
+                        "Authorization": "Bearer 123456iottoken" //
+                    }
+                }
+            );
             const json = await res.json();
 
             renderHistoryTable(json.data);
@@ -424,7 +430,9 @@
     try{
         await fetch('/api/devices/toggle', {
         method:'POST',
-        headers:{'Content-Type':'application/json'},
+        headers:{'Content-Type':'application/json',
+            "Authorization": 'Bearer 123456iottoken'
+        },
         body: JSON.stringify({ id: meta.id, status })
         });
         setLoading(key, true);
@@ -441,7 +449,13 @@
     (async function bootstrap(){
     // 3) Lấy danh sách thiết bị để đồng bộ trạng thái 3 công tắc
     try{
-        const r3 = await fetch('/api/devices');
+        const r3 = await fetch('/api/devices',
+            {
+                headers:{
+                    "Authorization":' Bearer 123456iottoken'
+                }
+            }
+        );
         const devices = await r3.json();
         const byId = {}; devices.forEach(d=> byId[d.id]=d);
         Object.entries(DEVICE_MAP).forEach(([key,{id}])=>{

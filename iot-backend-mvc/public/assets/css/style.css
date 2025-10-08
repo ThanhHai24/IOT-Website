@@ -548,8 +548,14 @@ i.ac-on .snow.delay {
 
         /* Nút Prev/Next giữ style cũ nếu muốn */
         .btn{
-        border:none; background: var(--light,#eef2f7); color: var(--dark,#111827);
-        padding:6px 10px; border-radius:8px; cursor:pointer;
+        border:none; 
+        background: var(--white); 
+        font-weight: bold;
+        color: var(--dark,#111827);
+        padding:6px 10px; 
+        border-radius:8px; 
+        cursor:pointer;
+        height: 100%;
         }
 
         /* Nút số trang dạng pill */

@@ -29,12 +29,24 @@ const options = {
       description: 'Tài liệu API cho hệ thống IoT',
     },
     servers: [
+      { url: 'http://localhost:3000/api' },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT', // hoặc "Token" nếu dùng token tĩnh
+        },
+      },
+    },
+    security: [
       {
-        url: 'http://localhost:3000/api', // base url API
+        bearerAuth: [], // áp dụng cho toàn bộ API
       },
     ],
   },
-  apis: ['./src/routes/*.js'], // nơi chứa docs (comment trong routes)
+  apis: ['./src/routes/*.js'], // nơi chứa swagger comment
 };
 
 const specs = swaggerJsdoc(options);

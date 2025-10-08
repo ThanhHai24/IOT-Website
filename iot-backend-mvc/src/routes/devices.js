@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import DevicesController from '../controllers/DevicesController.js';
+import { verifyToken } from '../middleware/auth.js';
+
 const router = Router();
 
 /**
@@ -15,6 +17,8 @@ const router = Router();
  *   get:
  *     summary: Lấy danh sách thiết bị
  *     tags: [Devices]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Danh sách thiết bị
@@ -27,10 +31,29 @@ const router = Router();
  *                 properties:
  *                   id:
  *                     type: integer
- *                     example: 1
  *                   name:
  *                     type: string
- *                     example: Air Conditioner
+ *                   status:
+ *                     type: string
+ *                   usage_seconds_today:
+ *                     type: integer
+ *                   usage_date:
+ *                     type: string
+ *                   last_state_changed_at:
+ *                     type: string
+ *               example:              
+ *                 - id: 1
+ *                   name: "Đèn 1"
+ *                   status: "ON"
+ *                   usage_seconds_today: 0
+ *                   usage_date: "2025-10-03"
+ *                   last_state_changed_at: "2025-10-03 13:38:05"
+ *                 - id: 2
+ *                   name: "Đèn 2"
+ *                   status: "OFF"
+ *                   usage_seconds_today: 300
+ *                   usage_date: "2025-10-03"
+ *                   last_state_changed_at: "2025-10-03 12:15:00"
  */
 
 /**
@@ -39,6 +62,8 @@ const router = Router();
  *   get:
  *     summary: Lấy lịch sử hành động của thiết bị
  *     tags: [Devices]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Danh sách lịch sử bật/tắt
@@ -49,15 +74,31 @@ const router = Router();
  *               items:
  *                 type: object
  *                 properties:
+ *                   id:
+ *                     type: integer
  *                   deviceId:
  *                     type: integer
- *                     example: 1
- *                   action:
+ *                   deviceName:
  *                     type: string
- *                     example: "ON"
- *                   timestamp:
+ *                   status:
  *                     type: string
- *                     example: "2025-10-03T08:00:00Z"
+ *                   actionBy:
+ *                     type: string
+ *                   time:
+ *                     type: string
+ *               example:               
+ *                 - id: 58
+ *                   deviceId: 3
+ *                   deviceName: "Đèn 3"
+ *                   status: "ON"
+ *                   actionBy: "User"
+ *                   time: "2025-10-03 13:38:09"
+ *                 - id: 57
+ *                   deviceId: 2
+ *                   deviceName: "Đèn 2"
+ *                   status: "OFF"
+ *                   actionBy: "System"
+ *                   time: "2025-10-03 13:20:00"
  */
 
 /**
@@ -66,6 +107,8 @@ const router = Router();
  *   post:
  *     summary: Bật/tắt thiết bị
  *     tags: [Devices]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -76,7 +119,7 @@ const router = Router();
  *               id:
  *                 type: integer
  *                 example: 2
- *               action:
+ *               status:
  *                 type: string
  *                 enum: [ON, OFF]
  *                 example: "ON"
@@ -88,17 +131,19 @@ const router = Router();
  *             schema:
  *               type: object
  *               properties:
- *                 id:
- *                   type: integer
- *                 name:
- *                   type: string
- *                 status:
- *                   type: string
+ *                     topic:
+ *                       type: string
+ *                     msg:
+ *                       type: string
+ *               example:             
+ *                 ok: true
+ *                 info:
+ *                   topic: "esp8266/devices"
+ *                   msg: "{\"id\":2,\"status\":\"OFF\",\"actionBy\":\"User\"}"
  */
 
-
-router.get('/action_history', DevicesController.getActionHistory);
-router.get('/', DevicesController.list);
-router.post('/toggle', DevicesController.toggle);
+router.get('/action_history', verifyToken, DevicesController.getActionHistory);
+router.get('/', verifyToken, DevicesController.list);
+router.post('/toggle', verifyToken, DevicesController.toggle);
 
 export default router;

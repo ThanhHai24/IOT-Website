@@ -84,7 +84,7 @@ export default {
               [Op.like]: `%${search}%`,
             }),
           ];
-        } else if (field === "actionBy") {
+        } else if (field === "actionby") {
           where[Op.and] = [
             SequelizeWhere(literal("CAST(`ActionHistory`.`actionBy` AS CHAR)"), {
               [Op.like]: `%${search}%`,

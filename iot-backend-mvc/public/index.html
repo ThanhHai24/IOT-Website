@@ -163,9 +163,9 @@
                     
                 </div>
                 <div class="profile-links">
-                    <a href="#"><img src="assets/images/github.jpg" onclick="alert('Updating')" alt=""></a>
-                    <a href="#"><img src="assets/images/PDF.png" onclick="alert('Updating')" alt=""></a>
-                    <a href="#"><img src="assets/images/Swagger.png" onclick="alert('Updating')" alt=""></a>
+                    <a href="https://github.com/ThanhHai24/IOT-Website"><img src="assets/images/github.jpg" alt=""></a>
+                    <a href="https://docs.google.com/document/d/18-zN4Ud4orReVs2r7J5CfNzvaIeG-Kev/edit"><img src="assets/images/PDF.png" alt=""></a>
+                    <a href="http://localhost:3000/api-docs"><img src="assets/images/Swagger.png"  alt=""></a>
                 </div>
             </div>
         </div>
@@ -289,12 +289,21 @@
 
         // Thêm điểm vào chart
         function addPoint(tsISOorMs, temp, hum, lux, keep=300){
-        const ts = typeof tsISOorMs==='string' ? new Date(tsISOorMs).getTime() : tsISOorMs;
-        if(!isNaN(temp)) lineChart.data.datasets[0].data.push({x:ts,y:Number(temp)});
-        if(!isNaN(hum))  lineChart.data.datasets[1].data.push({x:ts,y:Number(hum)});
-        if(!isNaN(lux))  lineChart.data.datasets[2].data.push({x:ts,y:Number(lux)});
-        lineChart.data.datasets.forEach(ds=>{ while(ds.data.length>keep) ds.data.shift(); });
-        lineChart.update('none');
+            const ts = typeof tsISOorMs==='string' ? new Date(tsISOorMs).getTime() : tsISOorMs;
+            if(!isNaN(temp)) lineChart.data.datasets[0].data.push({x:ts,y:Number(temp)});
+            if(!isNaN(hum))  lineChart.data.datasets[1].data.push({x:ts,y:Number(hum)});
+            if(!isNaN(lux))  lineChart.data.datasets[2].data.push({x:ts,y:Number(lux)});
+            lineChart.data.datasets.forEach(ds=>{ while(ds.data.length>keep) ds.data.shift(); });
+            lineChart.update('none');
+        }
+
+        function removeOldestPoint(){
+            lineChart.data.datasets.forEach(ds => {
+                if (ds.data.length > 0) {
+                    ds.data.shift(); // Xóa phần tử đầu tiên (cũ nhất)
+                }
+            });
+            lineChart.update();
         }
 
         /** =============================
@@ -303,14 +312,22 @@
         (async function bootstrap(){
         // 1) Snapshot cảm biến mới nhất
         try{
-            const r1 = await fetch('/api/sensors/latest');
+            const r1 = await fetch('/api/sensors/latest',{
+                headers:{
+                    "Authorization": 'bearer 123456iottoken'
+                }
+            });
             const latest = await r1.json();
             if(latest && latest.temp!=null) updateSensorCards(latest);
         }catch(e){ console.warn('load latest sensors failed', e); }
 
         // 2) Lịch sử để vẽ chart (limit 200 gần nhất)
         try{
-            const r2 = await fetch('/api/sensors?limit=200');
+            const r2 = await fetch('/api/sensors?limit=400',{
+                headers:{
+                    "Authorization" : 'bearer 123456iottoken'
+                }
+            });
             const json = await r2.json();
             let history = Array.isArray(json) ? json : json.data || [];
             history.sort((a,b)=> new Date(a.measured_at) - new Date(b.measured_at));
@@ -320,7 +337,11 @@
 
         // 3) Lấy danh sách thiết bị để đồng bộ trạng thái 3 công tắc
         try{
-            const r3 = await fetch('/api/devices');
+            const r3 = await fetch('/api/devices',{
+                headers:{
+                    "Authorization":' bearer 123456iottoken'
+                }
+            });
             const devices = await r3.json();
             const byId = {}; devices.forEach(d=> byId[d.id]=d);
             Object.entries(DEVICE_MAP).forEach(([key,{id}])=>{
@@ -339,6 +360,7 @@
         socket.on('sensors:new', (row)=>{
         updateSensorCards(row);
         addPoint(row.measured_at || Date.now(), row.temp, row.humid, row.light);
+        removeOldestPoint();
         });
 
         /** =============================
@@ -371,7 +393,9 @@
         try{
             await fetch('/api/devices/toggle', {
             method:'POST',
-            headers:{'Content-Type':'application/json'},
+            headers:{'Content-Type':'application/json',
+                "Authorization": 'bearer 123456iottoken'
+            },
             body: JSON.stringify({ id: meta.id, status })
             });
             // Tạm set UI (ACK về sẽ đồng bộ lại)
