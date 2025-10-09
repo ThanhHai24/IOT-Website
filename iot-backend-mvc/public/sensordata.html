@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
     <title>IoT Dashboard - Device Monitoring & Control</title>
 </head>
+
 <body>
     <!-- SideBar -->
     <div class="sidebar" id="sidebar">
@@ -35,7 +37,7 @@
     </div>
 
     <!-- Main Content -->
-     <div class="main-content">
+    <div class="main-content">
         <!-- TopBar -->
         <div class="header">
             <h1 class="page-title" id="pageTitle">Dashboard</h1>
@@ -44,7 +46,7 @@
                 <span class="profile-name">Nông Thanh Hải</span>
             </div>
         </div>
-        
+
         <!-- Sensor Data Page -->
         <div id="sensor" class="page active">
             <!-- Stats Cards -->
@@ -99,7 +101,7 @@
                     <div class="sensor-card">
                         <div class="sensor-info">
                             <h3>Light Level</h3>
-                            <div class="sensor-value" id="light" >750 lux</div>
+                            <div class="sensor-value" id="light">750 lux</div>
                         </div>
                         <div class="sensor-icon light-icon"><i class="bi bi-brightness-high-fill light-icon"></i></div>
                     </div>
@@ -119,7 +121,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Search & Select -->
             <div class="search-selectbar">
                 <div class="search">
@@ -187,7 +189,7 @@
 
         </div>
     </div>
-        <!-- Profile Modal -->
+    <!-- Profile Modal -->
     <div id="profileModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -212,15 +214,16 @@
                             <p><strong>Lớp:</strong> HTTT06</p>
                             <p><strong>Trường:</strong> Học Viện Công Nghệ Bưu Chính Viễn Thông</p>
                             <p><strong>Chuyên Ngành:</strong> Công nghệ thông tin</p>
-                            
+
                         </div>
                     </div>
-                    
+
                 </div>
                 <div class="profile-links">
                     <a href="https://github.com/ThanhHai24/IOT-Website"><img src="assets/images/github.jpg" alt=""></a>
-                    <a href="https://docs.google.com/document/d/18-zN4Ud4orReVs2r7J5CfNzvaIeG-Kev/edit"><img src="assets/images/PDF.png" alt=""></a>
-                    <a href="http://localhost:3000/api-docs"><img src="assets/images/Swagger.png"  alt=""></a>
+                    <a href="https://docs.google.com/document/d/18-zN4Ud4orReVs2r7J5CfNzvaIeG-Kev/edit"><img
+                            src="assets/images/PDF.png" alt=""></a>
+                    <a href="http://localhost:3000/api-docs"><img src="assets/images/Swagger.png" alt=""></a>
                 </div>
             </div>
         </div>
@@ -249,10 +252,32 @@
             <td>${Number(r.temp).toFixed(1)}</td>
             <td>${Number(r.humid).toFixed(1)}</td>
             <td>${Number(r.light).toFixed(1)}</td>
-            <td>${r.measured_at}</td>
+            <td class="copy-time" title="Click to copy">${r.measured_at}</td>
             </tr>
         `).join("");
         }
+
+        // ============================
+        // Click COPY
+        // ============================
+        document.addEventListener("click", (e) => {
+        const cell = e.target.closest(".copy-time");
+        if (cell) {
+            const originalText = cell.textContent.trim();
+
+            navigator.clipboard.writeText(originalText).then(() => {
+            // Đổi text thành "Copied!"
+            cell.textContent = "Copied!";
+            cell.classList.add("copied");
+
+            // Sau 1 giây, đổi lại text ban đầu
+            setTimeout(() => {
+                cell.textContent = originalText;
+                cell.classList.remove("copied");
+            }, 1000);
+            });
+        }
+        });
 
         // ========= Load API & render =========
         async function loadTable() {
@@ -381,4 +406,5 @@
 
 
 </body>
+
 </html>

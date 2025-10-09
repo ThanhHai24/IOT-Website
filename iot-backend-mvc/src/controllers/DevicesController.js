@@ -43,20 +43,24 @@ export default {
   },
 
   // GET /api/devices/action_history
-  getActionHistory: async (req, res) => {
+  // ==========================
+getActionHistory: async (req, res) => {
     try {
       let {
         search = "",
-        field = "all",
         sort = "time",
         order = "desc",
         page = 1,
         limit = 10,
+        device = "all",
+        status = "all",
+        actionBy = "all",
       } = req.query;
 
       page = Number(page) || 1;
       limit = Number(limit) || 10;
 
+      // ====== Validate sort/order ======
       const validSortFields = ["time", "status", "deviceName", "actionBy"];
       const validOrders = ["ASC", "DESC"];
       const sortField = validSortFields.includes(sort) ? sort : "time";
@@ -64,60 +68,51 @@ export default {
         ? order.toUpperCase()
         : "DESC";
 
-      // where cho search
+      // ====== where ======
       const where = {};
-      if (search) {
-        const timeCondition = SequelizeWhere(
-          fn("DATE_FORMAT", col("ActionHistory.time"), "%Y-%m-%d %H:%i:%s"),
-          { [Op.like]: `%${search}%` }
-        );
 
-        if (field === "status") {
-          where[Op.and] = [
-            SequelizeWhere(literal("CAST(`ActionHistory`.`status` AS CHAR)"), {
-              [Op.like]: `%${search}%`,
-            }),
-          ];
-        } else if (field === "device") {
-          where[Op.and] = [
-            SequelizeWhere(literal("CAST(`Device`.`name` AS CHAR)"), {
-              [Op.like]: `%${search}%`,
-            }),
-          ];
-        } else if (field === "actionby") {
-          where[Op.and] = [
-            SequelizeWhere(literal("CAST(`ActionHistory`.`actionBy` AS CHAR)"), {
-              [Op.like]: `%${search}%`,
-            }),
-          ];
-        } else if (field === "time") {
-          where[Op.and] = [timeCondition];
-        } else if (field === "all") {
-          where[Op.or] = [
-            SequelizeWhere(literal("CAST(`ActionHistory`.`status` AS CHAR)"), {
-              [Op.like]: `%${search}%`,
-            }),
-            SequelizeWhere(literal("CAST(`Device`.`name` AS CHAR)"), {
-              [Op.like]: `%${search}%`,
-            }),
-            SequelizeWhere(literal("CAST(`ActionHistory`.`actionBy` AS CHAR)"), {
-              [Op.like]: `%${search}%`,
-            }),
-            timeCondition,
-          ];
-        }
+      // Filter theo status
+      if (status && status !== "all") {
+        where.status = status;
       }
 
-      // đếm tổng số record
-      const total = await ActionHistory.count({
-        where,
-        include: [{ model: Device, attributes: [] }],
-      });
+      // Filter theo actionBy
+      if (actionBy && actionBy !== "all") {
+        where.actionBy = actionBy;
+      }
 
-      // lấy dữ liệu trang hiện tại
+      // Search theo Time (search luôn là chuỗi)
+      if (search) {
+        where[Op.and] = [
+          SequelizeWhere(
+            fn("DATE_FORMAT", col("ActionHistory.time"), "%Y-%m-%d %H:%i:%s"),
+            { [Op.like]: `%${search}%` }
+          ),
+        ];
+      }
+
+      // ====== include (join Device + filter theo tên) ======
+      const include = [
+        {
+          model: Device,
+          attributes: ["name"],
+          ...(device !== "all"
+            ? {
+                where: {
+                  name: { [Op.like]: `%${device}%` },
+                },
+              }
+            : {}),
+        },
+      ];
+
+      // ====== Count tổng số record ======
+      const total = await ActionHistory.count({ where, include });
+
+      // ====== Lấy danh sách theo trang ======
       const rows = await ActionHistory.findAll({
         where,
-        include: [{ model: Device, attributes: ["name"] }],
+        include,
         order: [
           [
             sortField === "deviceName"
@@ -130,8 +125,8 @@ export default {
         limit,
       });
 
-      // format JSON trả về
-      const data = rows.map(r => ({
+      // ====== Format dữ liệu ======
+      const data = rows.map((r) => ({
         id: r.id,
         deviceId: r.deviceId,
         deviceName: r.Device?.name || `Device #${r.deviceId}`,
@@ -140,6 +135,7 @@ export default {
         time: r.time,
       }));
 
+      // ====== Response ======
       res.json({
         data,
         pagination: {
@@ -147,11 +143,11 @@ export default {
           limit,
           total,
           totalPages: Math.ceil(total / limit),
-        }
+        },
       });
     } catch (err) {
       console.error("Lỗi khi lấy action history:", err);
       res.status(500).json({ error: err.message });
     }
-  }
+  },
 };

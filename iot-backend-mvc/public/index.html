@@ -390,6 +390,7 @@
         async function toggleDevice(key, checkboxEl){
         const meta = DEVICE_MAP[key]; if(!meta) return;
         const status = checkboxEl.checked ? 'ON' : 'OFF';
+        const toggleDeviceTimeouts = {};
         try{
             await fetch('/api/devices/toggle', {
             method:'POST',
@@ -402,6 +403,15 @@
             //setDeviceStatus(key, status);
             // setDeviceIcon(key, status);
             setLoading(key, true);
+
+            const timeoutId = setTimeout(() => {
+                    setLoading(key, false);
+                    alert('⚠️ Không nhận được phản hồi từ thiết bị!\nTrang sẽ được tải lại.');
+                    location.reload();
+                }, 10000);
+
+                // Lưu timeout để hủy khi ACK về
+                toggleDeviceTimeouts[key] = timeoutId;
         }catch(e){
             console.error('toggle failed', e);
             checkboxEl.checked = !checkboxEl.checked; // rollback

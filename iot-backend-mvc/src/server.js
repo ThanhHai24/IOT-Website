@@ -12,7 +12,7 @@ const io = new SocketIOServer(server, { cors: { origin: '*' } });
   await syncModels();
 
   // seed 3 thiết bị nếu chưa có (theo name)
-  const defaults = [{ name: 'Đèn 1' }, { name: 'Đèn 2' }, { name: 'Đèn 3' }];
+  const defaults = [{ name: 'LIGHT BULB' }, { name: 'FAN' }, { name: 'AIR CONDITIONER' }];
   for (const d of defaults) {
     const found = await Device.findOne({ where: { name: d.name } });
     if (!found) await Device.create(d);

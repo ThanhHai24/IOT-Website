@@ -37,8 +37,8 @@ export function renderPagination({
   const start = (page - 1) * limit + 1;
   const end = Math.min(page * limit, total);
   pageInfo.textContent = total > 0
-    ? `Hiển thị ${start}–${end} / ${total}`
-    : "Không có dữ liệu";
+    ? `Display ${start}–${end} / ${total}`
+    : "No records";
 
   // reset container
   container.innerHTML = "";

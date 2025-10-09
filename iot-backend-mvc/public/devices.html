@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+        integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="assets/css/style.css">
     <title>IoT Dashboard - Device Monitoring & Control</title>
 </head>
+
 <body>
     <!-- SideBar -->
     <div class="sidebar" id="sidebar">
@@ -36,7 +40,7 @@
     </div>
 
     <!-- Main Content -->
-     <div class="main-content">
+    <div class="main-content">
         <!-- TopBar -->
         <div class="header">
             <h1 class="page-title" id="pageTitle">Dashboard</h1>
@@ -48,7 +52,7 @@
         <!-- Devices Page -->
         <div id="devices" class="page active">
             <!-- Device List -->
-             <div class="dashboard-grid">
+            <div class="dashboard-grid">
                 <div class="card" id="card-light">
                     <div class="devicepage-card">
                         <div class="devicepage-info">
@@ -74,7 +78,7 @@
                     <div class="devicepage-card">
                         <div class="devicepage-info">
                             <h3>Fan</h3>
-                            <div class="devicepage-status off-status" id="status-fan" >OFF</div>
+                            <div class="devicepage-status off-status" id="status-fan">OFF</div>
                         </div>
                         <div class="devicepage-icon"><i id="icon-fan" class="fa-solid fa-fan"></i></div>
                     </div>
@@ -117,24 +121,35 @@
             <!-- Search & Select -->
             <div class="search-selectbar">
                 <div class="search">
-                    <div class="search-bar">
-                        <input type="text" id="searchInput" placeholder="Search...">
-                        <i class="bi bi-search search-icon"></i>
+                    <div class="select-bar">
+                        <select name="" id="deviceSelect">
+                            <option value="all">Devices</option>
+                            <option value="light">Light Bulb</option>
+                            <option value="fan">Fan</option>
+                            <option value="ac">Air Conditioner</option>
+                        </select>
                     </div>
                     <div class="select-bar">
-                        <select id="dataTypeSelect">
-                            <option value="all">All</option>
-                            <option value="device">Device</option>
-                            <option value="status">Status</option>
-                            <option value="actionby">Action By</option>
-                            <option value="time">Time</option>
+                        <select name="" id="statusSelect">
+                            <option value="all">Status</option>
+                            <option value="ON">ON</option>
+                            <option value="OFF">OFF</option>
                         </select>
+                    </div>
+                    <div class="select-bar">
+                        <select name="" id="selectBySelect">
+                            <option value="all">Action By</option>
+                            <option value="user">User</option>
+                            <option value="system">System</option>
+                        </select>
+                    </div>
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" placeholder="Search by Time ...">
+                        <i class="bi bi-search search-icon"></i>
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <!-- <div class="refresh-button">
-                        <button class="btn" onclick="location.reload()" aria-label="Làm mới trang"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
-                    </div> -->
+                    
                     <div class="page-size">
                         <label for="pageSizeSelect">Rows per page:</label>
                         <select id="pageSizeSelect" onchange="changePageSize()">
@@ -153,9 +168,9 @@
                 <table>
                     <thead>
                         <tr>
-                            <th class="inactive" data-sort="device">Device</th>
+                            <th class="inactive" data-sort="deviceName">Device</th>
                             <th class="inactive" data-sort="status">Status</th>
-                            <th class="inactive" data-sort="actionby">Action By</th>
+                            <th class="inactive" data-sort="actionBy">Action By</th>
                             <th class="inactive" data-sort="time">Time</th>
                         </tr>
                     </thead>
@@ -206,15 +221,16 @@
                             <p><strong>Lớp:</strong> HTTT06</p>
                             <p><strong>Trường:</strong> Học Viện Công Nghệ Bưu Chính Viễn Thông</p>
                             <p><strong>Chuyên Ngành:</strong> Công nghệ thông tin</p>
-                            
+
                         </div>
                     </div>
-                    
+
                 </div>
                 <div class="profile-links">
                     <a href="https://github.com/ThanhHai24/IOT-Website"><img src="assets/images/github.jpg" alt=""></a>
-                    <a href="https://docs.google.com/document/d/18-zN4Ud4orReVs2r7J5CfNzvaIeG-Kev/edit"><img src="assets/images/PDF.png" alt=""></a>
-                    <a href="http://localhost:3000/api-docs"><img src="assets/images/Swagger.png"  alt=""></a>
+                    <a href="https://docs.google.com/document/d/18-zN4Ud4orReVs2r7J5CfNzvaIeG-Kev/edit"><img
+                            src="assets/images/PDF.png" alt=""></a>
+                    <a href="http://localhost:3000/api-docs"><img src="assets/images/Swagger.png" alt=""></a>
                 </div>
             </div>
         </div>
@@ -224,7 +240,17 @@
     <script type="module">
         import { renderPagination } from "./assets/js/pagination-utils.js";
 
-        let historyState = { search:"", field:"all", sort:"time", order:"desc", page:1, limit:10 };
+        let historyState = { 
+            search: "", 
+            sort: "time", 
+            order: "desc", 
+            page: 1, 
+            limit: 10,
+            device: "all",
+            status: "all",
+            actionBy: "all"
+        };
+
 
         function renderHistoryTable(rows = []) {
             const tbody = document.getElementById("DataTable");
@@ -235,50 +261,71 @@
                     <td>${r.deviceName || r.device || `Device #${r.deviceId}`}</td>
                     <td><span style="color:${color};font-weight:600">${r.status}</span></td>
                     <td>${r.actionBy || "System"}</td>
-                    <td>${r.time}</td>
+                    <td class="copy-time" title="Click to copy">${r.time}</td>
                 </tr>
                 `;
             }).join("");
         }
 
-        async function loadActionHistory() {
-        const { search, field, sort, order, page, limit } = historyState;
-        try {
-            const url = `/api/devices/action_history?search=${encodeURIComponent(search)}&field=${field}&sort=${sort}&order=${order}&page=${page}&limit=${limit}`;
-            const res = await fetch(url,
-                {
-                    headers:{
-                        "Authorization": "Bearer 123456iottoken" //
-                    }
-                }
-            );
-            const json = await res.json();
+        // ============================
+        // Click COPY
+        // ============================
+        document.addEventListener("click", (e) => {
+        const cell = e.target.closest(".copy-time");
+        if (cell) {
+            const originalText = cell.textContent.trim();
 
-            renderHistoryTable(json.data);
+            navigator.clipboard.writeText(originalText).then(() => {
+            // Đổi text thành "Copied!"
+            cell.textContent = "Copied!";
+            cell.classList.add("copied");
 
-            // dùng chung renderPagination
-            renderPagination({
-            containerId: "pagination",
-            prevId: "prevPage",
-            nextId: "nextPage",
-            pageInfoId: "pageInfo",
-            pagination: json.pagination,
-            onPageChange: (newPage) => {
-                historyState.page = newPage;
-                loadActionHistory();
-            }
+            // Sau 1 giây, đổi lại text ban đầu
+            setTimeout(() => {
+                cell.textContent = originalText;
+                cell.classList.remove("copied");
+            }, 1000);
             });
-        } catch (err) {
-            console.error("Load action history failed", err);
         }
+        });
+
+
+
+        async function loadActionHistory() {
+            const { search, field, sort, order, page, limit, device, status, actionBy } = historyState;
+            try {
+                const url = `/api/devices/action_history?search=${encodeURIComponent(search)}&field=${field}&sort=${sort}&order=${order}&page=${page}&limit=${limit}&device=${device}&status=${status}&actionBy=${actionBy}`;
+                const res = await fetch(url, {
+                headers: {
+                    "Authorization": "Bearer 123456iottoken"
+                }
+                });
+                const json = await res.json();
+
+                renderHistoryTable(json.data);
+
+                renderPagination({
+                containerId: "pagination",
+                prevId: "prevPage",
+                nextId: "nextPage",
+                pageInfoId: "pageInfo",
+                pagination: json.pagination,
+                onPageChange: (newPage) => {
+                    historyState.page = newPage;
+                    loadActionHistory();
+                }
+                });
+            } catch (err) {
+                console.error("Load action history failed", err);
+            }
         }
 
         // Sự kiện search / filter / page size
         document.getElementById("searchInput").addEventListener("keypress", e => {
         if (e.key === "Enter") {
-            historyState.search = e.target.value;
-            historyState.page = 1;
-            loadActionHistory();
+        historyState.search = e.target.value;
+        historyState.page = 1;
+        loadActionHistory();
         }
         });
         document.querySelector(".search-icon").addEventListener("click", () => {
@@ -286,228 +333,303 @@
         historyState.page = 1;
         loadActionHistory();
         });
-        document.getElementById("dataTypeSelect").addEventListener("change", e => {
-        historyState.field = e.target.value;
-        historyState.page = 1;
-        loadActionHistory();
-        });
+        // document.getElementById("dataTypeSelect").addEventListener("change", e => {
+        // historyState.field = e.target.value;
+        // historyState.page = 1;
+        // loadActionHistory();
+        // });
         document.getElementById("pageSizeSelect").addEventListener("change", e => {
         historyState.limit = Number(e.target.value || 10);
         historyState.page = 1;
         loadActionHistory();
         });
+        document.getElementById("deviceSelect").addEventListener("change", e => {
+        historyState.device = e.target.value;
+        historyState.page = 1;
+        loadActionHistory();
+        });
+
+        document.getElementById("statusSelect").addEventListener("change", e => {
+        historyState.status = e.target.value;
+        historyState.page = 1;
+        loadActionHistory();
+        });
+
+        document.getElementById("selectBySelect").addEventListener("change", e => {
+        historyState.actionBy = e.target.value;
+        historyState.page = 1;
+        loadActionHistory();
+        });
+
+        function resetOthers(activeTh) {
+            document.querySelectorAll("thead th").forEach(col => {
+            if (col !== activeTh) {
+                col.classList.remove("asc", "desc");
+                col.classList.add("inactive");
+            }
+            });
+        }
 
         // Sort khi click header
         document.querySelectorAll(".data-table thead th").forEach(th => {
         th.addEventListener("click", () => {
-            const field = th.dataset.sort || "time";
-            // reset class
-            document.querySelectorAll(".data-table thead th").forEach(col => {
-            if (col !== th) col.classList.remove("asc", "desc");
-            });
-            // toggle asc/desc
-            if (th.classList.contains("asc")) {
-            th.classList.remove("asc"); th.classList.add("desc");
-            historyState.order = "desc";
-            } else {
-            th.classList.remove("desc"); th.classList.add("asc");
-            historyState.order = "asc";
-            }
-            historyState.sort = field;
-            historyState.page = 1;
-            loadActionHistory();
+        const field = th.dataset.sort || "time";
+
+        // reset class của các cột khác
+        document.querySelectorAll(".data-table thead th").forEach(col => {
+        if (col !== th) col.classList.remove("asc", "desc");
+        });
+
+        // toggle class cho cột hiện tại
+        if (th.classList.contains("asc")) {
+        resetOthers(th);
+        th.classList.remove("asc");
+        th.classList.add("desc");
+        historyState.order = "desc";
+        } else if (th.classList.contains("desc")) {
+        resetOthers(th);
+        th.classList.remove("desc");
+        th.classList.add("asc");
+        historyState.order = "asc";
+        } else {
+        resetOthers(th);
+        th.classList.remove("inactive");
+        th.classList.add("asc");
+        historyState.order = "asc";
+        }
+
+        // cập nhật field + reload
+        historyState.sort = field;
+        historyState.page = 1;
+        loadActionHistory();
         });
         });
+
 
         // Initial load
         loadActionHistory();
     </script>
 
     <script>
-    const socket = io();
+        const socket = io();
 
-    // Map tên UI -> id thiết bị trong DB (seed: 1,2,3)
-    const DEVICE_MAP = {
-        light: { id: 1, label: 'Light Bulb' },
-        fan:   { id: 2, label: 'Fan' },
-        ac:    { id: 3, label: 'Air Conditioner' }
-    };
-
-    // Helpers
-    function fmtUsage(sec){
-        const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;
-        if(h>0) return `${h}h ${m}m`;
-        if(m>0) return `${m}m ${s}s`;
-        return `${s}s`;
-    }
-    function setDeviceStatus(key, status){
-        const span = document.getElementById(`status-${key}`);
-        if(!span) return;
-        span.innerText = status;
-        span.classList.remove('on-status','off-status');
-        span.classList.add(status==='ON'?'on-status':'off-status');
-    }
-    function setDeviceIcon(key, status) {
-        const icon = document.getElementById(`icon-${key}`);
-        if (!icon) return;
-
-        const onClass = `${key}-on`;
-        if (status === "ON") {
-            icon.classList.add(onClass);
-            if (key === "ac" && !icon.querySelector(".snow")) {
-            icon.insertAdjacentHTML(
-                "beforeend",
-                '<span class="snow">❄</span><span class="snow delay">❄</span>'
-            );
+        // Map tên UI -> id thiết bị trong DB (seed: 1,2,3)
+        const DEVICE_MAP = {
+            light: {
+                id: 1,
+                label: 'Light Bulb'
+            },
+            fan: {
+                id: 2,
+                label: 'Fan'
+            },
+            ac: {
+                id: 3,
+                label: 'Air Conditioner'
             }
-        } else {
-            icon.classList.remove(onClass);
-            if (key === "ac") {
-            icon.querySelectorAll(".snow").forEach((el) => el.remove());
+        };
+
+        // Helpers
+        function fmtUsage(sec) {
+            const h = Math.floor(sec / 3600),
+                m = Math.floor((sec % 3600) / 60),
+                s = sec % 60;
+            if (h > 0) return `${h}h ${m}m`;
+            if (m > 0) return `${m}m ${s}s`;
+            return `${s}s`;
+        }
+
+        function setDeviceStatus(key, status) {
+            const span = document.getElementById(`status-${key}`);
+            if (!span) return;
+            span.innerText = status;
+            span.classList.remove('on-status', 'off-status');
+            span.classList.add(status === 'ON' ? 'on-status' : 'off-status');
+        }
+
+        function setDeviceIcon(key, status) {
+            const icon = document.getElementById(`icon-${key}`);
+            if (!icon) return;
+
+            const onClass = `${key}-on`;
+            if (status === "ON") {
+                icon.classList.add(onClass);
+                if (key === "ac" && !icon.querySelector(".snow")) {
+                    icon.insertAdjacentHTML(
+                        "beforeend",
+                        '<span class="snow">❄</span><span class="snow delay">❄</span>'
+                    );
+                }
+            } else {
+                icon.classList.remove(onClass);
+                if (key === "ac") {
+                    icon.querySelectorAll(".snow").forEach((el) => el.remove());
+                }
             }
         }
-    }
-    function updateUsage(key, seconds) {
-        const usageEl = document.getElementById(`usage-${key}`);
-        if (usageEl) {
-            usageEl.innerText = fmtUsage(seconds || 0);
-        }
-    }
-    function setLoading(key, isLoading) {
-        const card = document.getElementById(`card-${key}`);
-        if (!card) return;
-        if (isLoading) {
-            card.classList.add("loading");
-        } else {
-            card.classList.remove("loading");
-        }
-    }
-    const usageTimers = {};
 
-    function startUsageTimer(key, dev) {
-        stopUsageTimer(key); // clear timer cũ
-
-        if (dev.status !== "ON") {
-            updateUsage(key, dev.usage_seconds_today || 0);
-            return;
+        function updateUsage(key, seconds) {
+            const usageEl = document.getElementById(`usage-${key}`);
+            if (usageEl) {
+                usageEl.innerText = fmtUsage(seconds || 0);
+            }
         }
 
-        const base = dev.usage_seconds_today || 0;
-        const lastChanged = dev.last_state_changed_at 
-            ? new Date(dev.last_state_changed_at).getTime() 
-            : Date.now();
-
-        function tick() {
-            const now = Date.now();
-            const extra = Math.floor((now - lastChanged) / 1000); 
-            updateUsage(key, base + extra);
-
-            usageTimers[key] = requestAnimationFrame(tick);
+        function setLoading(key, isLoading) {
+            const card = document.getElementById(`card-${key}`);
+            if (!card) return;
+            if (isLoading) {
+                card.classList.add("loading");
+            } else {
+                card.classList.remove("loading");
+            }
         }
+        const usageTimers = {};
+        const toggleDeviceTimeouts = {};
 
-        tick();
+        function startUsageTimer(key, dev) {
+            stopUsageTimer(key); // clear timer cũ
+
+            if (dev.status !== "ON") {
+                updateUsage(key, dev.usage_seconds_today || 0);
+                return;
+            }
+
+            const base = dev.usage_seconds_today || 0;
+            const lastChanged = dev.last_state_changed_at ?
+                new Date(dev.last_state_changed_at).getTime() :
+                Date.now();
+
+            function tick() {
+                const now = Date.now();
+                const extra = Math.floor((now - lastChanged) / 1000);
+                updateUsage(key, base + extra);
+
+                usageTimers[key] = requestAnimationFrame(tick);
+            }
+
+            tick();
         }
 
         function stopUsageTimer(key) {
-        if (usageTimers[key]) {
-            cancelAnimationFrame(usageTimers[key]);
-            usageTimers[key] = null;
-        }
-    }
-
-    
-    function getToggleInput(key){
-        // tìm checkbox theo onchange chứa toggleDevice('<key>'
-        return document.querySelector(`input[type="checkbox"][onchange*="toggleDevice('${key}'"]`);
-    }
-
-    /** =============================
-     *  Toggle thiết bị từ Dashboard
-     *  ============================= */
-    async function toggleDevice(key, checkboxEl){
-    const meta = DEVICE_MAP[key]; if(!meta) return;
-    const status = checkboxEl.checked ? 'ON' : 'OFF';
-    try{
-        await fetch('/api/devices/toggle', {
-        method:'POST',
-        headers:{'Content-Type':'application/json',
-            "Authorization": 'Bearer 123456iottoken'
-        },
-        body: JSON.stringify({ id: meta.id, status })
-        });
-        setLoading(key, true);
-        // Tạm set UI (ACK về sẽ đồng bộ lại)
-        //setDeviceStatus(key, status);
-        // setDeviceIcon(key, status);
-    }catch(e){
-        console.error('toggle failed', e);
-        checkboxEl.checked = !checkboxEl.checked; // rollback
-        alert('Toggle thất bại!');
-    }
-    }
-
-    (async function bootstrap(){
-    // 3) Lấy danh sách thiết bị để đồng bộ trạng thái 3 công tắc
-    try{
-        const r3 = await fetch('/api/devices',
-            {
-                headers:{
-                    "Authorization":' Bearer 123456iottoken'
-                }
+            if (usageTimers[key]) {
+                cancelAnimationFrame(usageTimers[key]);
+                usageTimers[key] = null;
             }
-        );
-        const devices = await r3.json();
-        const byId = {}; devices.forEach(d=> byId[d.id]=d);
-        Object.entries(DEVICE_MAP).forEach(([key,{id}])=>{
-            const dev = byId[id]; if(!dev) return;
+        }
+
+
+        function getToggleInput(key) {
+            // tìm checkbox theo onchange chứa toggleDevice('<key>'
+            return document.querySelector(`input[type="checkbox"][onchange*="toggleDevice('${key}'"]`);
+        }
+
+        /** =============================
+         *  Toggle thiết bị từ Dashboard
+         *  ============================= */
+        async function toggleDevice(key, checkboxEl) {
+            const meta = DEVICE_MAP[key];
+            if (!meta) return;
+            const status = checkboxEl.checked ? 'ON' : 'OFF';
+            try {
+                await fetch('/api/devices/toggle', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "Authorization": 'Bearer 123456iottoken'
+                    },
+                    body: JSON.stringify({
+                        id: meta.id,
+                        status
+                    })
+                });
+                setLoading(key, true);
+
+                const timeoutId = setTimeout(() => {
+                    setLoading(key, false);
+                    alert('⚠️ Không nhận được phản hồi từ thiết bị!\nTrang sẽ được tải lại.');
+                    location.reload();
+                }, 10000);
+
+                // Lưu timeout để hủy khi ACK về
+                toggleDeviceTimeouts[key] = timeoutId;
+
+                // Tạm set UI (ACK về sẽ đồng bộ lại)
+                //setDeviceStatus(key, status);
+                // setDeviceIcon(key, status);
+            } catch (e) {
+                console.error('toggle failed', e);
+                checkboxEl.checked = !checkboxEl.checked; // rollback
+                alert('Toggle thất bại!');
+            }
+        }
+
+        (async function bootstrap() {
+            // 3) Lấy danh sách thiết bị để đồng bộ trạng thái 3 công tắc
+            try {
+                const r3 = await fetch('/api/devices', {
+                    headers: {
+                        "Authorization": ' Bearer 123456iottoken'
+                    }
+                });
+                const devices = await r3.json();
+                const byId = {};
+                devices.forEach(d => byId[d.id] = d);
+                Object.entries(DEVICE_MAP).forEach(([key, {
+                    id
+                }]) => {
+                    const dev = byId[id];
+                    if (!dev) return;
+                    setDeviceStatus(key, dev.status);
+                    setDeviceIcon(key, dev.status);
+                    updateUsage(key, dev.usage_seconds_today);
+                    const input = getToggleInput(key);
+                    if (input) input.checked = dev.status === 'ON';
+                    if (dev.status === "ON") {
+                        startUsageTimer(key, dev);
+                    } else {
+                        stopUsageTimer(key);
+                        updateUsage(key, dev.usage_seconds_today || 0);
+                    }
+                });
+            } catch (e) {
+                console.warn('load devices failed', e);
+            }
+        })();
+
+        /** =============================
+         *  Lắng nghe ACK từ server
+         *  ============================= */
+        socket.on("devices:update", (dev) => {
+            // tìm key trong DEVICE_MAP theo id
+            const entry = Object.entries(DEVICE_MAP).find(([_, meta]) => meta.id === dev.id);
+            if (!entry) return;
+            const [key] = entry;
+
+            // cập nhật UI chính xác theo ack
             setDeviceStatus(key, dev.status);
             setDeviceIcon(key, dev.status);
             updateUsage(key, dev.usage_seconds_today);
+            setLoading(key, false);
+            // loadActionHistory(); // reload lịch sử
+
             const input = getToggleInput(key);
-            if(input) input.checked = dev.status==='ON';
+            if (input) input.checked = dev.status === "ON";
+
             if (dev.status === "ON") {
                 startUsageTimer(key, dev);
             } else {
                 stopUsageTimer(key);
-                updateUsage(key, dev.usage_seconds_today || 0);
+                updateUsage(key, dev.usage_seconds_today || 0); // dùng giá trị DB khi OFF
             }
+
+
+            console.log("ACK cập nhật thiết bị:", dev);
         });
-    }catch(e){ console.warn('load devices failed', e); }
-    })();
-
-    /** =============================
-     *  Lắng nghe ACK từ server
-     *  ============================= */
-    socket.on("devices:update", (dev) => {
-    // tìm key trong DEVICE_MAP theo id
-    const entry = Object.entries(DEVICE_MAP).find(([_, meta]) => meta.id === dev.id);
-    if (!entry) return;
-    const [key] = entry;
-
-    // cập nhật UI chính xác theo ack
-    setDeviceStatus(key, dev.status);
-    setDeviceIcon(key, dev.status);
-    updateUsage(key, dev.usage_seconds_today);
-    setLoading(key, false);
-    // loadActionHistory(); // reload lịch sử
-
-    const input = getToggleInput(key);
-    if (input) input.checked = dev.status === "ON";
-
-    if (dev.status === "ON") {
-        startUsageTimer(key, dev);
-    } else {
-        stopUsageTimer(key);
-        updateUsage(key, dev.usage_seconds_today || 0); // dùng giá trị DB khi OFF
-    }
-
-
-    console.log("ACK cập nhật thiết bị:", dev);
-    });
-
-</script>
+    </script>
 
 
 
 </body>
+
 </html>
