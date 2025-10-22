@@ -43,7 +43,7 @@
     <div class="main-content">
         <!-- TopBar -->
         <div class="header">
-            <h1 class="page-title" id="pageTitle">Dashboard</h1>
+            <h1 class="page-title" id="pageTitle">Devices</h1>
             <div class="profile-section" onclick="openProfileModal()">
                 <div class="profile-avatar"><img src="assets/images/Anhthe.jpg" alt=""></div>
                 <span class="profile-name">Nông Thanh Hải</span>
@@ -228,9 +228,9 @@
                 </div>
                 <div class="profile-links">
                     <a href="https://github.com/ThanhHai24/IOT-Website"><img src="assets/images/github.jpg" alt=""></a>
-                    <a href="https://docs.google.com/document/d/18-zN4Ud4orReVs2r7J5CfNzvaIeG-Kev/edit"><img
+                    <a href="https://docs.google.com/document/d/1gJG5sEg6Mw9m79ZmT4RZiH7sZypOxrtNFNgiKbvLD1M/edit?tab=t.0#heading=h.ytk1q4yqg11s"><img
                             src="assets/images/PDF.png" alt=""></a>
-                    <a href="http://localhost:3000/api-docs"><img src="assets/images/Swagger.png" alt=""></a>
+                    <a href="https://documenter.getpostman.com/view/40078199/2sB3QKsAAP"><img src="assets/images/PostMan.png" alt=""></a>
                 </div>
             </div>
         </div>
@@ -611,6 +611,10 @@
             setDeviceIcon(key, dev.status);
             updateUsage(key, dev.usage_seconds_today);
             setLoading(key, false);
+            if (toggleDeviceTimeouts[key]) {
+            clearTimeout(toggleDeviceTimeouts[key]);
+            delete toggleDeviceTimeouts[key];
+            }
             // loadActionHistory(); // reload lịch sử
 
             const input = getToggleInput(key);

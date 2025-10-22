@@ -164,8 +164,8 @@
                 </div>
                 <div class="profile-links">
                     <a href="https://github.com/ThanhHai24/IOT-Website"><img src="assets/images/github.jpg" alt=""></a>
-                    <a href="https://docs.google.com/document/d/18-zN4Ud4orReVs2r7J5CfNzvaIeG-Kev/edit"><img src="assets/images/PDF.png" alt=""></a>
-                    <a href="http://localhost:3000/api-docs"><img src="assets/images/Swagger.png"  alt=""></a>
+                    <a href="https://docs.google.com/document/d/1gJG5sEg6Mw9m79ZmT4RZiH7sZypOxrtNFNgiKbvLD1M/edit?tab=t.0#heading=h.ytk1q4yqg11s"><img src="assets/images/PDF.png" alt=""></a>
+                    <a href="https://documenter.getpostman.com/view/40078199/2sB3QKsAAP"><img src="assets/images/PostMan.png"  alt=""></a>
                 </div>
             </div>
         </div>
@@ -186,6 +186,7 @@
          *  A) Khai báo chung
          *  ============================= */
         const socket = io();
+        const toggleDeviceTimeouts = {};
 
         // Map tên UI -> id thiết bị trong DB (seed: 1,2,3)
         const DEVICE_MAP = {
@@ -323,7 +324,7 @@
 
         // 2) Lịch sử để vẽ chart (limit 200 gần nhất)
         try{
-            const r2 = await fetch('/api/sensors?limit=400',{
+            const r2 = await fetch('/api/sensors?limit=200',{
                 headers:{
                     "Authorization" : 'bearer 123456iottoken'
                 }
@@ -377,6 +378,13 @@
         setDeviceIcon(key, dev.status);
         setLoading(key, false);
 
+        // Nếu có timeout đang đếm -> xóa để tránh reload sai
+        if (toggleDeviceTimeouts[key]) {
+        clearTimeout(toggleDeviceTimeouts[key]);
+        delete toggleDeviceTimeouts[key];
+        }
+        
+
         const input = getToggleInput(key);
         if (input) input.checked = dev.status === "ON";
 
@@ -390,7 +398,6 @@
         async function toggleDevice(key, checkboxEl){
         const meta = DEVICE_MAP[key]; if(!meta) return;
         const status = checkboxEl.checked ? 'ON' : 'OFF';
-        const toggleDeviceTimeouts = {};
         try{
             await fetch('/api/devices/toggle', {
             method:'POST',
