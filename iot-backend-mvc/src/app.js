@@ -5,9 +5,6 @@ import routes from './routes/index.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// ✅ import thêm swagger
-import swaggerUi from 'swagger-ui-express';
-import swaggerJsdoc from 'swagger-jsdoc';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,40 +16,15 @@ app.use(express.json());
 
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
-// ================= Swagger Config =================
-const options = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'IOT API Documentation',
-      version: '1.0.0',
-      description: 'Tài liệu API cho hệ thống IoT',
-    },
-    servers: [
-      { url: 'http://localhost:3000/api' },
-    ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT', // hoặc "Token" nếu dùng token tĩnh
-        },
-      },
-    },
-    security: [
-      {
-        bearerAuth: [], // áp dụng cho toàn bộ API
-      },
-    ],
-  },
-  apis: ['./src/routes/*.js'], // nơi chứa swagger comment
-};
-
-const specs = swaggerJsdoc(options);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
-// ==================================================
-
 app.use('/api', routes);
 
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
+});
+app.get('/devices', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'devices.html'));
+});
+app.get('/sensors', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'sensordata.html'));
+});
 export default app;
