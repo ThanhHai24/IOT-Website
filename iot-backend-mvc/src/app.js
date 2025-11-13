@@ -27,4 +27,7 @@ app.get('/devices', (req, res) => {
 app.get('/sensors', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'sensordata.html'));
 });
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'dashboard.html'));
+});
 export default app;

@@ -7,6 +7,7 @@ SensorData.init({
   temp:  { type: DataTypes.FLOAT, allowNull: false },
   humid: { type: DataTypes.FLOAT, allowNull: false },
   light: { type: DataTypes.FLOAT, allowNull: false },
+  rain:  { type: DataTypes.FLOAT, allowNull: false, defaultValue: 0 },
   measured_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW }
 }, {
   sequelize,

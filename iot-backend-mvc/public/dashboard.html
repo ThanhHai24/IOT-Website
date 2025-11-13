@@ -15,13 +15,13 @@
         <div class="logo">IOT Dashboard</div>
         <ul class="nav-menu">
             <li class="nav-item">
-                <a class="nav-link active" href="/">
+                <a class="nav-link" href="/">
                     <span class="nav-icon"><i class="ri-home-7-line"></i></span>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/dashboard">
+                <a class="nav-link active" href="/dashboard">
                     <span class="nav-icon"><i class="ri-home-7-line"></i></span>
                     <span>Dashboard2</span>
                 </a>
@@ -58,24 +58,10 @@
             <div class="dashboard-grid">
                 <div class="card sensor-card">
                     <div class="sensor-info">
-                        <h3>Temperature</h3>
-                        <div class="sensor-value" id="temp">25.5<span>°C</span></div>
+                        <h3>Rain Meter</h3>
+                        <div class="sensor-value" id="rain">00<span>mm</span></div>
                     </div>
                     <div class="sensor-icon temp-icon"><i class="bi bi-thermometer icon-bg"></i></div>
-                </div>
-                <div class="card sensor-card">
-                    <div class="sensor-info">
-                        <h3>Humidity</h3>
-                        <div class="sensor-value" id="humid">65<span>%</span></div>
-                    </div>
-                    <div class="sensor-icon humid-icon"><i class="bi bi-droplet humid-icon"></i></div>
-                </div>
-                <div class="card sensor-card">
-                    <div class="sensor-info">
-                        <h3>Light Level</h3>
-                        <div class="sensor-value" id="light">750 <span>lux</span></div>
-                    </div>
-                    <div class="sensor-icon light-icon"><i class="bi bi-brightness-high-fill light-icon"></i></div>
                 </div>
             </div>
 
@@ -87,7 +73,7 @@
                             <i id="icon-light" class="bi bi-lightbulb-fill"></i>
                         </div>
                         <div class="device-info">
-                            <h3>Light Bulb</h3>
+                            <h3>Light Bulb 2</h3>
                             <span class="device-status" id="status-light"></span>
                         </div>
                     </div>
@@ -96,44 +82,12 @@
                         <span class="slider"></span>
                     </label>
                 </div>
-                <div class="card device-card" id="card-fan">
-                    <div class="device-card-name">
-                        <div class="device-icon">
-                            <i id="icon-fan" class="fa-solid fa-fan"></i>
-                        </div>
-                        <div class="device-info">
-                            <h3>Fan</h3>
-                            <span class="device-status" id="status-fan"></span>
-                        </div>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" onchange="toggleDevice('fan', this)">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="card device-card" id="card-ac">
-                    <div class="device-card-name">
-                        <div class="device-icon">
-                            <i id="icon-ac" class="bi bi-snow2">   
-                            </i>
-                        </div>
-                        <div class="device-info">
-                            <h3>Air Conditioner</h3>
-                            <span class="device-status" id="status-ac"></span>
-                        </div>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" onchange="toggleDevice('ac', this)">
-                        <span class="slider"></span>
-                    </label>
-                </div>
             </div>
 
             <!-- Chart -->
-            <div class="chart-container">
-                <h3 class="chart-title">Sensor Readings Over Time</h3>
-                <canvas id="chartLine" height="120"></canvas>
-                <div id="chart"></div>
+            <div class="chart-container" style="flex:1; min-width:250px;">
+                <h3 class="chart-title">Rain Level</h3>
+                <canvas id="chartRain" height="120"></canvas>
             </div>
             
         </div>
@@ -197,9 +151,7 @@
 
         // Map tên UI -> id thiết bị trong DB (seed: 1,2,3)
         const DEVICE_MAP = {
-        light: { id: 1, label: 'Light Bulb' },
-        fan:   { id: 2, label: 'Fan' },
-        ac:    { id: 3, label: 'Air Conditioner' }
+        light: { id: 4, label: 'Light Bulb' },
         };
 
         // Helpers
@@ -255,63 +207,68 @@
          *  ============================= */
         function updateSensorCards(row){
         if(!row) return;
-        const t=Number(row.temp), h=Number(row.humid), l=Number(row.light);
-        if(!isNaN(t)) document.getElementById('temp').innerText  = `${t.toFixed(1)}°C`;
-        if(!isNaN(h)) document.getElementById('humid').innerText = `${h.toFixed(1)}%`;
-        if(!isNaN(l)) document.getElementById('light').innerText = `${l.toFixed(1)} lux`;
+        const t=Number(row.temp),
+        h=Number(row.humid),
+        l=Number(row.light),
+        r=Number(row.rain);
+        if(!isNaN(r)) document.getElementById('rain').innerText  = `${r.toFixed(0)} mm`;
         }
 
         /** =============================
          *  C) Chart thời gian thực
          *  ============================= */
-        const ctx = document.getElementById('chartLine').getContext('2d');
-        const lineChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            datasets: [
-            { label:'Temperature (°C)', data:[], yAxisID:'y',  borderColor:'#ef4444', backgroundColor:'#ef4444', tension:0.3, pointRadius:0 },
-            { label:'Humidity (%)',     data:[], yAxisID:'y',  borderColor:'#3b82f6', backgroundColor:'#3b82f6', tension:0.3, pointRadius:0 },
-            { label:'Illuminance (lux)',data:[], yAxisID:'y1', borderColor:'#f59e0b', backgroundColor:'#f59e0b', tension:0.3, pointRadius:0 }
-            ]
-        },
-        options: {
-            responsive:true, maintainAspectRatio:false,
-            interaction:{ mode:'nearest', intersect:false },
-            scales:{
-            x:{ type:'time', time:{ unit:'minute' }, ticks:{ maxRotation:0 } },
-            y:{ position:'left', title:{ display:true, text:'Temp / Hum' }, min:0, max:100, grid:{ drawOnChartArea:true } },
-            y1:{ position:'right', title:{ display:true, text:'Lux' }, min:0, grid:{ drawOnChartArea:false } } // <-- 65k lux
+        // ===== Biểu đồ mưa riêng =====
+        const ctxRain = document.getElementById('chartRain').getContext('2d');
+        const rainChart = new Chart(ctxRain, {
+            type: 'line',
+            data: {
+                datasets: [
+                    {
+                        label: 'Rain Level (mm)',
+                        data: [],
+                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(34,197,94,0.3)',
+                        tension: 0,
+                        pointRadius: 0,
+                        fill: true
+                    }
+                ]
             },
-            plugins:{
-            legend:{ display:true },
-            tooltip:{ callbacks:{ label:(ctx)=>{
-                const label=ctx.dataset.label||'', v=ctx.parsed.y;
-                if(label.includes('Temperature')) return `${label}: ${v.toFixed(1)} °C`;
-                if(label.includes('Humidity'))    return `${label}: ${v.toFixed(0)} %`;
-                if(label.includes('Illuminance')) return `${label}: ${v.toFixed(0)} lux`;
-                return `${label}: ${v}`;
-            }}}
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'nearest', intersect: false },
+                scales: {
+                    x: { type: 'time', time: { unit: 'minute' } },
+                    y: {
+                        title: { display: true, text: 'Rain (mm)' },
+                        min: 0,
+                        suggestedMax: 100
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
             }
-        }
         });
 
+
         // Thêm điểm vào chart
-        function addPoint(tsISOorMs, temp, hum, lux, keep=300){
+        function addPoint(tsISOorMs, rain, keep=300){
             const ts = typeof tsISOorMs==='string' ? new Date(tsISOorMs).getTime() : tsISOorMs;
-            if(!isNaN(temp)) lineChart.data.datasets[0].data.push({x:ts,y:Number(temp)});
-            if(!isNaN(hum))  lineChart.data.datasets[1].data.push({x:ts,y:Number(hum)});
-            if(!isNaN(lux))  lineChart.data.datasets[2].data.push({x:ts,y:Number(lux)});
-            lineChart.data.datasets.forEach(ds=>{ while(ds.data.length>keep) ds.data.shift(); });
-            lineChart.update('none');
+            if(!isNaN(rain)) rainChart.data.datasets[0].data.push({x:ts,y:Number(rain)});
+            console.log(rain);
+            rainChart.data.datasets.forEach(ds=>{ while(ds.data.length>keep) ds.data.shift(); });
+            rainChart.update('none');
         }
 
         function removeOldestPoint(){
-            lineChart.data.datasets.forEach(ds => {
+            rainChart.data.datasets.forEach(ds => {
                 if (ds.data.length > 0) {
                     ds.data.shift(); // Xóa phần tử đầu tiên (cũ nhất)
                 }
             });
-            lineChart.update();
+            rainChart.update();
         }
 
         /** =============================
@@ -331,7 +288,7 @@
 
         // 2) Lịch sử để vẽ chart (limit 200 gần nhất)
         try{
-            const r2 = await fetch('/api/sensors?limit=200',{
+            const r2 = await fetch('/api/sensors?limit=50',{
                 headers:{
                     "Authorization" : 'bearer 123456iottoken'
                 }
@@ -339,7 +296,7 @@
             const json = await r2.json();
             let history = Array.isArray(json) ? json : json.data || [];
             history.sort((a,b)=> new Date(a.measured_at) - new Date(b.measured_at));
-            history.forEach(row=> addPoint(row.measured_at, row.temp, row.humid, row.light));
+            history.forEach(row => addPoint(row.measured_at, row.rain));
 
         }catch(e){ console.warn('load history failed', e); }
 
@@ -367,7 +324,7 @@
          *  ============================= */
         socket.on('sensors:new', (row)=>{
         updateSensorCards(row);
-        addPoint(row.measured_at || Date.now(), row.temp, row.humid, row.light);
+        addPoint(row.measured_at || Date.now(), row.rain);
         removeOldestPoint();
         });
 
@@ -432,6 +389,43 @@
             alert('Toggle thất bại!');
         }
         }
+    </script>
+    <script>
+    /* ======== Hiệu ứng nháy cho card Rain ======== */
+    (function(){
+        // Tạo hiệu ứng blink bằng CSS
+        const style = document.createElement("style");
+        style.textContent = `
+            @keyframes rainBlink {
+                0%, 100% { box-shadow: 0 0 20px 5px rgba(255,0,0,0.7); }
+                50% { box-shadow: 0 0 5px 2px rgba(255,0,0,0.3); }
+            }
+            .rain-alert {
+                animation: rainBlink 0.6s infinite;
+                background-color: #ffe5e5;
+            }
+        `;
+        document.head.appendChild(style);
+
+        const rainCard = document.querySelector(".sensor-card"); // card Rain
+        const rainValueEl = document.getElementById("rain");
+
+        if(!rainCard || !rainValueEl) return;
+
+        const observer = new MutationObserver(() => {
+            const text = rainValueEl.innerText.replace(/[^\d.]/g, "");
+            const rainVal = parseFloat(text);
+            if (!isNaN(rainVal)) {
+                if (rainVal > 50) {
+                    rainCard.classList.add("rain-alert");
+                } else {
+                    rainCard.classList.remove("rain-alert");
+                }
+            }
+        });
+
+        observer.observe(rainValueEl, { childList: true, characterData: true, subtree: true });
+    })();
     </script>
 
 

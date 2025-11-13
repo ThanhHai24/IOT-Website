@@ -47,6 +47,7 @@ export function initMqtt(io) {
           temp:  payload.temp  ?? payload.temperature,
           humid: payload.humid ?? payload.humidity,
           light: payload.light ?? payload.lux,
+          rain: payload.rain ?? 0,
           measured_at: payload.measured_at ? new Date(payload.measured_at) : new Date()
         });
         io.emit('sensors:new', row);
