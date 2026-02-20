@@ -44,10 +44,10 @@ export function initMqtt(io) {
        *  ============================= */
       if (topic === process.env.MQTT_TOPIC_SENSORS) {
         const row = await SensorData.create({
-          temp:  payload.temp  ?? payload.temperature,
-          humid: payload.humid ?? payload.humidity,
-          light: payload.light ?? payload.lux,
-          rain: payload.rain ?? 0,
+          temp:  payload.temp,
+          humid: payload.humid,
+          light: payload.light,
+          rain: payload.rain,
           measured_at: payload.measured_at ? new Date(payload.measured_at) : new Date()
         });
         io.emit('sensors:new', row);

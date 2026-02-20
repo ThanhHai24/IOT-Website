@@ -272,7 +272,6 @@
             const originalText = cell.textContent.trim();
 
             navigator.clipboard.writeText(originalText).then(() => {
-            // Đổi text thành "Copied!"
             cell.textContent = "Copied!";
             cell.classList.add("copied");
 

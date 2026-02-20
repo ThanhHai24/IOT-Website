@@ -352,7 +352,7 @@
             });
             const devices = await r3.json();
             const byId = {}; devices.forEach(d=> byId[d.id]=d);
-            Object.entries(DEVICE_MAP).forEach(([key,{id}])=>{
+            Object.entries(f).forEach(([key,{id}])=>{
             const dev = byId[id]; if(!dev) return;
             setDeviceStatus(key, dev.status);
             setDeviceIcon(key, dev.status);
@@ -372,7 +372,7 @@
         });
 
         /** =============================
-         *  Lắng nghe ACK từ server
+         *  ACK từ server
          *  ============================= */
         socket.on("devices:update", (dev) => {
         // tìm key trong DEVICE_MAP theo id

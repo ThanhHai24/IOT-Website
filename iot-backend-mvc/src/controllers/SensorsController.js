@@ -11,7 +11,6 @@ export default {
   // GET /api/sensors/today
   today: async (req, res) => {
     try {
-      // Lấy ngày hôm nay theo timezone VN (+7)
       const today = new Date();
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, "0");

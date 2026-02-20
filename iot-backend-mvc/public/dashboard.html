@@ -61,7 +61,7 @@
                         <h3>Rain Meter</h3>
                         <div class="sensor-value" id="rain">00<span>mm</span></div>
                     </div>
-                    <div class="sensor-icon temp-icon"><i class="bi bi-thermometer icon-bg"></i></div>
+                    <div class="sensor-icon temp-icon"><i class="bi bi-cloud-rain"></i></div>
                 </div>
             </div>
 
@@ -153,14 +153,6 @@
         const DEVICE_MAP = {
         light: { id: 4, label: 'Light Bulb' },
         };
-
-        // Helpers
-        function fmtUsage(sec){
-        const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;
-            if(h>0) return `${h}h ${m}m`;
-            if(m>0) return `${m}m ${s}s`;
-            return `${s}s`;
-        }
         function setDeviceStatus(key, status){
             const span = document.getElementById(`status-${key}`);
             if(!span) return;
@@ -337,7 +329,7 @@
         if (!entry) return;
         const [key] = entry;
 
-        // cập nhật UI chính xác theo ack
+        // cập nhật UI theo ack
         setDeviceStatus(key, dev.status);
         setDeviceIcon(key, dev.status);
         setLoading(key, false);
@@ -393,21 +385,8 @@
     <script>
     /* ======== Hiệu ứng nháy cho card Rain ======== */
     (function(){
-        // Tạo hiệu ứng blink bằng CSS
         const style = document.createElement("style");
-        style.textContent = `
-            @keyframes rainBlink {
-                0%, 100% { box-shadow: 0 0 20px 5px rgba(255,0,0,0.7); }
-                50% { box-shadow: 0 0 5px 2px rgba(255,0,0,0.3); }
-            }
-            .rain-alert {
-                animation: rainBlink 0.6s infinite;
-                background-color: #ffe5e5;
-            }
-        `;
-        document.head.appendChild(style);
-
-        const rainCard = document.querySelector(".sensor-card"); // card Rain
+        const rainCard = document.querySelector(".sensor-card");
         const rainValueEl = document.getElementById("rain");
 
         if(!rainCard || !rainValueEl) return;
